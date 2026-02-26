@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { StoreProvider } from "@/redux/provider";
 import { Poppins } from "next/font/google";
+import { TopLoader } from "@/components/shared/TopLoader";
 import "./globals.css";
 
 const poppins = Poppins({
@@ -20,7 +21,10 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body className={`${poppins.variable} antialiased`}>
-        <StoreProvider>{children}</StoreProvider>
+        <StoreProvider>
+          <TopLoader />
+          {children}
+        </StoreProvider>
       </body>
     </html>
   );
