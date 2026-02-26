@@ -3,6 +3,8 @@ import type { UserRole } from "@/types/admin";
 export type Permission =
   | "pos"
   | "orders"
+  | "online_orders"
+  | "settings"
   | "kitchen"
   | "products"
   | "inventory"
@@ -11,7 +13,7 @@ export type Permission =
   | "dashboard";
 
 const ROLE_PERMISSIONS: Record<UserRole, Permission[]> = {
-  admin: ["dashboard", "pos", "orders", "kitchen", "products", "inventory", "reports", "staff"],
+  admin: ["dashboard", "pos", "orders", "online_orders", "settings", "kitchen", "products", "inventory", "reports", "staff"],
   cashier: ["dashboard", "pos", "orders"],
   kitchen: ["kitchen"],
 };
@@ -31,6 +33,8 @@ const ALL_NAV: NavItem[] = [
   { href: "/inventory", label: "Inventory", permission: "inventory" },
   { href: "/reports", label: "Reports", permission: "reports" },
   { href: "/orders", label: "Orders", permission: "orders" },
+  { href: "/online-orders", label: "Online Orders", permission: "online_orders" },
+  { href: "/settings", label: "Settings", permission: "settings" },
   { href: "/staff", label: "Staff", permission: "staff" },
 ];
 

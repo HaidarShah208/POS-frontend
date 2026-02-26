@@ -5,12 +5,16 @@ import { orderSessionApi } from "./api/orderSession";
 import { productsApi } from "./api/products";
 import { inventoryApi } from "./api/inventory";
 import { reportsApi } from "./api/reports";
+import { onlineOrdersApi } from "./api/onlineOrders";
 import { authReducer } from "./api/auth";
+import { settingsReducer } from "./slices/settingsSlice";
 
 export const store = configureStore({
   reducer: {
     auth: authReducer,
+    settings: settingsReducer,
     [cartApi.reducerPath]: cartApi.reducer,
+    [onlineOrdersApi.reducerPath]: onlineOrdersApi.reducer,
     [kitchenApi.reducerPath]: kitchenApi.reducer,
     [orderSessionApi.reducerPath]: orderSessionApi.reducer,
     [productsApi.reducerPath]: productsApi.reducer,
@@ -24,7 +28,8 @@ export const store = configureStore({
       orderSessionApi.middleware,
       productsApi.middleware,
       inventoryApi.middleware,
-      reportsApi.middleware
+      reportsApi.middleware,
+      onlineOrdersApi.middleware
     ),
   devTools: process.env.NODE_ENV !== "production",
 });
