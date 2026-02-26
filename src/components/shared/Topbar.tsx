@@ -1,17 +1,60 @@
 "use client";
 
+import { useState, useRef, useEffect } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { useAppSelector, useAppDispatch } from "@/hooks/redux";
+import { logout } from "@/redux/api/auth";
 import { cn } from "@/lib/utils";
 
 type TopbarProps = {
   onMenuClick?: () => void;
 };
 
+const MOCK_NOTIFICATIONS = [
+  { id: "1", title: "Low stock: French Fries", time: "10m ago" },
+  { id: "2", title: "Order #1002 completed", time: "1h ago" },
+  { id: "3", title: "New order received", time: "2h ago" },
+];
+
 export function Topbar({ onMenuClick }: TopbarProps) {
+  const router = useRouter();
+  const dispatch = useAppDispatch();
+  const user = useAppSelector((s) => s.auth?.user);
+  const [searchOpen, setSearchOpen] = useState(false);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [notifOpen, setNotifOpen] = useState(false);
+  const [profileOpen, setProfileOpen] = useState(false);
+  const notifRef = useRef<HTMLDivElement>(null);
+  const profileRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    function handleClickOutside(e: MouseEvent) {
+      if (notifRef.current && !notifRef.current.contains(e.target as Node)) setNotifOpen(false);
+      if (profileRef.current && !profileRef.current.contains(e.target as Node)) setProfileOpen(false);
+    }
+    document.addEventListener("click", handleClickOutside);
+    return () => document.removeEventListener("click", handleClickOutside);
+  }, []);
+
+  const handleLogout = () => {
+    dispatch(logout());
+    router.push("/auth/login");
+  };
+
+  const handleGlobalSearch = () => {
+    if (searchQuery.trim()) {
+      router.push(`/products?q=${encodeURIComponent(searchQuery.trim())}`);
+      setSearchQuery("");
+      setSearchOpen(false);
+    }
+  };
+
   return (
     <header className="sticky top-0 z-40 flex h-14 items-center gap-4 border-b border-[var(--border)] bg-[var(--background)] px-4">
-      <div className="flex flex-1 items-center gap-2">
+      <div className="flex flex-1 items-center gap-2 max-w-xl">
         <Button
           variant="ghost"
           size="icon"
@@ -19,19 +62,65 @@ export function Topbar({ onMenuClick }: TopbarProps) {
           onClick={onMenuClick}
           aria-label="Open menu"
         >
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
             <path d="M4 6h16M4 12h16M4 18h16" />
           </svg>
         </Button>
-        <span className="text-sm font-medium text-[var(--muted-foreground)]">Restaurant POS</span>
+        <div className="hidden sm:flex flex-1 relative">
+          <Input
+            placeholder="Search products & orders..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            onFocus={() => setSearchOpen(true)}
+            onKeyDown={(e) => e.key === "Enter" && handleGlobalSearch()}
+            className="pl-9"
+          />
+          <svg className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[var(--muted-foreground)]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+          </svg>
+        </div>
+        <span className="text-sm font-medium text-[var(--muted-foreground)] sm:hidden">POS</span>
       </div>
-      <div className="flex items-center gap-2">
-        <Button variant="ghost" size="sm" asChild>
-          <Link href="/pos">Open POS</Link>
-        </Button>
-        <Button variant="outline" size="sm" asChild>
-          <Link href="/auth/login">Logout</Link>
-        </Button>
+
+      <div className="flex items-center gap-1">
+        <div className="relative" ref={notifRef}>
+          <Button variant="ghost" size="icon" onClick={() => setNotifOpen(!notifOpen)} aria-label="Notifications">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+              <path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9M13.73 21a2 2 0 01-3.46 0" />
+            </svg>
+            <span className="absolute top-1 right-1 w-2 h-2 rounded-full bg-[var(--destructive)]" />
+          </Button>
+          {notifOpen && (
+            <div className="absolute right-0 top-full mt-1 w-72 rounded-lg border border-[var(--border)] bg-[var(--background)] shadow-lg py-2 z-50">
+              <p className="px-4 py-2 text-sm font-medium border-b border-[var(--border)]">Notifications</p>
+              {MOCK_NOTIFICATIONS.map((n) => (
+                <button key={n.id} className="block w-full text-left px-4 py-2 text-sm hover:bg-[var(--muted)]">
+                  {n.title}
+                  <span className="block text-xs text-[var(--muted-foreground)]">{n.time}</span>
+                </button>
+              ))}
+            </div>
+          )}
+        </div>
+
+        <div className="relative" ref={profileRef}>
+          <Button variant="ghost" size="sm" onClick={() => setProfileOpen(!profileOpen)} className="gap-2">
+            <span className="hidden sm:inline">{user?.name ?? "User"}</span>
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+              <path d="M19 9l-7 7-7-7" />
+            </svg>
+          </Button>
+          {profileOpen && (
+            <div className="absolute right-0 top-full mt-1 w-48 rounded-lg border border-[var(--border)] bg-[var(--background)] shadow-lg py-2 z-50">
+              <p className="px-4 py-2 text-sm text-[var(--muted-foreground)] truncate">{user?.email}</p>
+              <p className="px-4 py-0 text-xs text-[var(--muted-foreground)] capitalize">{user?.role}</p>
+              <Link href="/pos" className="block px-4 py-2 text-sm hover:bg-[var(--muted)]">Open POS</Link>
+              <button className="block w-full text-left px-4 py-2 text-sm hover:bg-[var(--muted)]" onClick={handleLogout}>
+                Logout
+              </button>
+            </div>
+          )}
+        </div>
       </div>
     </header>
   );

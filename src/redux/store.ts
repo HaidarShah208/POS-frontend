@@ -2,18 +2,29 @@ import { configureStore } from "@reduxjs/toolkit";
 import { cartApi } from "./api/cart";
 import { kitchenApi } from "./api/kitchen";
 import { orderSessionApi } from "./api/orderSession";
+import { productsApi } from "./api/products";
+import { inventoryApi } from "./api/inventory";
+import { reportsApi } from "./api/reports";
+import { authReducer } from "./api/auth";
 
 export const store = configureStore({
   reducer: {
+    auth: authReducer,
     [cartApi.reducerPath]: cartApi.reducer,
     [kitchenApi.reducerPath]: kitchenApi.reducer,
     [orderSessionApi.reducerPath]: orderSessionApi.reducer,
+    [productsApi.reducerPath]: productsApi.reducer,
+    [inventoryApi.reducerPath]: inventoryApi.reducer,
+    [reportsApi.reducerPath]: reportsApi.reducer,
   },
   middleware: (getDefaultMiddleware) =>
     getDefaultMiddleware().concat(
       cartApi.middleware,
       kitchenApi.middleware,
-      orderSessionApi.middleware
+      orderSessionApi.middleware,
+      productsApi.middleware,
+      inventoryApi.middleware,
+      reportsApi.middleware
     ),
   devTools: process.env.NODE_ENV !== "production",
 });
