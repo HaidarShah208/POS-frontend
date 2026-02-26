@@ -13,11 +13,7 @@ type TopbarProps = {
   onMenuClick?: () => void;
 };
 
-const MOCK_NOTIFICATIONS = [
-  { id: "1", title: "Low stock: French Fries", time: "10m ago" },
-  { id: "2", title: "Order #1002 completed", time: "1h ago" },
-  { id: "3", title: "New order received", time: "2h ago" },
-];
+ 
 
 export function Topbar({ onMenuClick }: TopbarProps) {
   const router = useRouter();
@@ -53,7 +49,7 @@ export function Topbar({ onMenuClick }: TopbarProps) {
   };
 
   return (
-    <header className="sticky top-0 z-40 flex h-14 items-center gap-4 border-b border-[var(--border)] bg-[var(--background)] px-4">
+    <header className="sticky top-0 z-40 flex justify-between h-14 items-center gap-4 border-b border-(--border) bg-background px-4">
       <div className="flex flex-1 items-center gap-2 max-w-xl">
         <Button
           variant="ghost"
@@ -82,26 +78,8 @@ export function Topbar({ onMenuClick }: TopbarProps) {
         <span className="text-sm font-medium text-[var(--muted-foreground)] sm:hidden">POS</span>
       </div>
 
-      <div className="flex items-center gap-1">
-        <div className="relative" ref={notifRef}>
-          <Button variant="ghost" size="icon" onClick={() => setNotifOpen(!notifOpen)} aria-label="Notifications">
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-              <path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9M13.73 21a2 2 0 01-3.46 0" />
-            </svg>
-            <span className="absolute top-1 right-1 w-2 h-2 rounded-full bg-[var(--destructive)]" />
-          </Button>
-          {notifOpen && (
-            <div className="absolute right-0 top-full mt-1 w-72 rounded-lg border border-[var(--border)] bg-[var(--background)] shadow-lg py-2 z-50">
-              <p className="px-4 py-2 text-sm font-medium border-b border-[var(--border)]">Notifications</p>
-              {MOCK_NOTIFICATIONS.map((n) => (
-                <button key={n.id} className="block w-full text-left px-4 py-2 text-sm hover:bg-[var(--muted)]">
-                  {n.title}
-                  <span className="block text-xs text-[var(--muted-foreground)]">{n.time}</span>
-                </button>
-              ))}
-            </div>
-          )}
-        </div>
+      <div className="flex items-center  gap-1">
+        
 
         <div className="relative" ref={profileRef}>
           <Button variant="ghost" size="sm" onClick={() => setProfileOpen(!profileOpen)} className="gap-2">

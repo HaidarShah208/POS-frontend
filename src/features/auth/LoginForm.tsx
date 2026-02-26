@@ -1,16 +1,30 @@
 "use client";
 
 import { useForm } from "react-hook-form";
+import { useRouter } from "next/navigation";
+import { useDispatch } from "react-redux";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { setUser } from "@/redux/api/auth";
+import { validateLogin } from "@/lib/mock-auth";
 
 type LoginFormValues = { email: string; password: string };
 
 export function LoginForm() {
-  const { register, handleSubmit, formState: { errors } } = useForm<LoginFormValues>();
+  const router = useRouter();
+  const dispatch = useDispatch();
+  const { register, handleSubmit, setError, formState: { errors } } = useForm<LoginFormValues>();
 
-  const onSubmit = (data: LoginFormValues) => console.log("Login", data);
+  const onSubmit = (data: LoginFormValues) => {
+    const user = validateLogin(data.email, data.password);
+    if (user) {
+      dispatch(setUser(user));
+      router.push("/dashboard");
+    } else {
+      setError("root", { message: "Invalid email or password." });
+    }
+  };
 
   return (
     <Card>
@@ -20,6 +34,9 @@ export function LoginForm() {
       </CardHeader>
       <CardContent>
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+          {errors.root && (
+            <p className="text-sm text-[var(--destructive)]">{errors.root.message}</p>
+          )}
           <div>
             <label htmlFor="email" className="mb-1 block text-sm font-medium">Email</label>
             <Input id="email" type="email" placeholder="you@example.com" {...register("email", { required: "Email is required" })} />

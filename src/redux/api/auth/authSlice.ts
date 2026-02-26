@@ -1,15 +1,8 @@
 import { createSlice } from "@reduxjs/toolkit";
 import type { AuthUser, UserRole } from "@/types/admin";
 
-const MOCK_USER: AuthUser = {
-  id: "u1",
-  email: "admin@pos.com",
-  name: "Admin User",
-  role: "admin",
-};
-
 const initialState: { user: AuthUser | null } = {
-  user: MOCK_USER,
+  user: null,
 };
 
 const authSlice = createSlice({

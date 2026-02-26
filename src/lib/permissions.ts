@@ -33,9 +33,7 @@ const ALL_NAV: NavItem[] = [
   { href: "/inventory", label: "Inventory", permission: "inventory" },
   { href: "/reports", label: "Reports", permission: "reports" },
   { href: "/orders", label: "Orders", permission: "orders" },
-  { href: "/online-orders", label: "Online Orders", permission: "online_orders" },
   { href: "/settings", label: "Settings", permission: "settings" },
-  { href: "/staff", label: "Staff", permission: "staff" },
 ];
 
 export function getNavItemsForRole(role: UserRole): NavItem[] {

@@ -1,7 +1,8 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
+import { useAppSelector } from "@/hooks/redux";
 import { Sidebar } from "@/components/shared/Sidebar";
 import { Topbar } from "@/components/shared/Topbar";
 import {
@@ -13,12 +14,23 @@ import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 
 export function DashboardShell({ children }: { children: React.ReactNode }) {
-  const [sidebarOpen, setSidebarOpen] = useState(false);
+  const router = useRouter();
   const pathname = usePathname();
+  const user = useAppSelector((s) => s.auth?.user);
+  const [sidebarOpen, setSidebarOpen] = useState(false);
+
+  useEffect(() => {
+    if (user === null) {
+      router.replace("/auth/login");
+      return;
+    }
+  }, [user, router]);
 
   useEffect(() => {
     setSidebarOpen(false);
   }, [pathname]);
+
+  if (user === null) return null;
 
   return (
     <div className="flex h-screen overflow-hidden">
