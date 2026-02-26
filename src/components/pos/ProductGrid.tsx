@@ -22,7 +22,7 @@ export function ProductGrid({
   categoryIdToScroll,
   onAddToCart,
 }: ProductGridProps) {
-  const sectionRefs = useRef<Record<string, HTMLDivElement | null>>({});
+  const sectionRefs = useRef<Record<string, HTMLElement | null>>({});
 
   useEffect(() => {
     if (categoryIdToScroll && sectionRefs.current[categoryIdToScroll]) {
@@ -49,10 +49,10 @@ export function ProductGrid({
           }}
           className="mb-8"
         >
-          <h2 className="mb-3 text-sm font-semibold uppercase tracking-wide text-[var(--muted-foreground)]">
+          <h2 className="mb-3 text-sm font-semibold uppercase tracking-wide text-(--muted-foreground)">
             {categoryName(categories, categoryId)}
           </h2>
-          <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-3 lg:grid-cols-4">
+          <div className="grid gap-3 grid-cols-1 lg:grid-cols-4">
             {items.map((product) => (
               <ProductCard key={product.id} product={product} onAdd={onAddToCart} />
             ))}

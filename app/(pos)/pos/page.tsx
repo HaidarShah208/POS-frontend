@@ -57,9 +57,10 @@ export default function POSPage() {
 
   return (
     <>
+      {/* md and up: 3-panel layout with categories, products, order summary */}
       <div className="hidden h-full w-full md:flex">
-        <aside className="sticky top-0 flex h-full w-48 shrink-0 flex-col border-r border-(--border) bg-background">
-          <div className="p-3 border-b border-(--border)]">
+        <aside className="sticky top-0 flex h-full w-44 shrink-0 flex-col border-r border-[var(--border)] bg-[var(--background)] md:w-48">
+          <div className="p-3 border-b border-[var(--border)]">
             <Button variant="ghost" size="sm" asChild>
               <Link href="/dashboard">← Back</Link>
             </Button>
@@ -79,15 +80,17 @@ export default function POSPage() {
             onAddToCart={handleAddToCart}
           />
         </section>
-        <aside className="sticky top-0 hidden w-96 shrink-0 lg:block">
+        {/* Order summary: visible from md (was lg-only); narrower on md, full width on lg */}
+        <aside className="sticky top-0 hidden w-80 shrink-0 border-l border-[var(--border)] bg-[var(--background)] md:block lg:w-96">
           <CartPanel onCheckoutClick={handleCheckoutClick} />
         </aside>
       </div>
 
       <CheckoutDrawer open={checkoutOpen} onOpenChange={setCheckoutOpen} />
 
+      {/* sm and below: header with cart toggle + categories + products; cart in drawer */}
       <div className="flex h-full w-full flex-col md:hidden">
-        <header className="flex shrink-0 items-center justify-between border-b border-(--border) bg-background px-3 py-2">
+        <header className="flex shrink-0 items-center justify-between border-b border-[var(--border)] bg-[var(--background)] px-3 py-2">
           <Button variant="ghost" size="sm" asChild>
             <Link href="/dashboard">← Back</Link>
           </Button>
@@ -97,8 +100,8 @@ export default function POSPage() {
             onCheckoutClick={handleCheckoutClick}
           />
         </header>
-        <div className="flex flex-1 overflow-hidden">
-          <aside className="hidden w-36 shrink-0 flex-col border-r border-(--border)] bg-background) sm:flex">
+        <div className="flex flex-1 min-h-0 overflow-hidden">
+          <aside className="flex w-28 shrink-0 flex-col border-r border-(--border) bg-background sm:w-36">
             <CategoryList
               categories={MOCK_CATEGORIES}
               activeId={activeCategoryId}
