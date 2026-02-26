@@ -9,8 +9,13 @@ import {
   selectCartTotals,
   selectCartIsEmpty,
 } from "@/redux/selectors";
-import { useAppSelector, useAppDispatch } from "@/hooks/redux";
-import { increaseQty, decreaseQty, removeFromCart, clearCart } from "@/redux/api/cart";
+import { useAppSelector } from "@/hooks/redux";
+import {
+  useIncreaseQtyMutation,
+  useDecreaseQtyMutation,
+  useRemoveFromCartMutation,
+  useClearCartMutation,
+} from "@/redux/api/cart";
 import { ClearCartModal } from "./ClearCartModal";
 
 type CartPanelProps = {
@@ -18,8 +23,11 @@ type CartPanelProps = {
 };
 
 export function CartPanel({ onCheckoutClick }: CartPanelProps) {
-  const dispatch = useAppDispatch();
   const [clearModalOpen, setClearModalOpen] = useState(false);
+  const [increaseQty] = useIncreaseQtyMutation();
+  const [decreaseQty] = useDecreaseQtyMutation();
+  const [removeFromCart] = useRemoveFromCartMutation();
+  const [clearCart] = useClearCartMutation();
   const items = useAppSelector(selectCartItems);
   const { subtotal, tax, discountAmount, grandTotal } = useAppSelector(selectCartTotals);
   const isEmpty = useAppSelector(selectCartIsEmpty);
@@ -56,7 +64,7 @@ export function CartPanel({ onCheckoutClick }: CartPanelProps) {
                       variant="outline"
                       size="icon"
                       className="pos-touch h-10 w-10 min-h-[44px] min-w-[44px]"
-                      onClick={() => dispatch(decreaseQty(item.id))}
+                      onClick={() => decreaseQty(item.id)}
                     >
                       −
                     </Button>
@@ -67,7 +75,7 @@ export function CartPanel({ onCheckoutClick }: CartPanelProps) {
                       variant="outline"
                       size="icon"
                       className="pos-touch h-10 w-10 min-h-[44px] min-w-[44px]"
-                      onClick={() => dispatch(increaseQty(item.id))}
+                      onClick={() => increaseQty(item.id)}
                     >
                       +
                     </Button>
@@ -75,7 +83,7 @@ export function CartPanel({ onCheckoutClick }: CartPanelProps) {
                       variant="ghost"
                       size="icon"
                       className="pos-touch h-10 w-10 min-h-[44px] min-w-[44px] text-[var(--destructive)]"
-                      onClick={() => dispatch(removeFromCart(item.id))}
+                      onClick={() => removeFromCart(item.id)}
                     >
                       ×
                     </Button>
@@ -132,7 +140,7 @@ export function CartPanel({ onCheckoutClick }: CartPanelProps) {
       <ClearCartModal
         open={clearModalOpen}
         onOpenChange={setClearModalOpen}
-        onConfirm={() => dispatch(clearCart())}
+        onConfirm={() => clearCart()}
       />
     </div>
   );

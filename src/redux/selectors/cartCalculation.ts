@@ -1,11 +1,16 @@
 import { createSelector } from "@reduxjs/toolkit";
 import type { RootState } from "@/redux/store";
+import { cartApi } from "@/redux/api/cart";
 
-// Stable input selectors: single branch from state to avoid unnecessary recomputations
-const selectCartState = (state: RootState) => state.cart;
-const selectCartItems = (state: RootState) => state.cart.items;
-const selectCartDiscount = (state: RootState) => state.cart.discount;
-const selectCartDiscountType = (state: RootState) => state.cart.discountType;
+const selectCartResult = (state: RootState) =>
+  cartApi.endpoints.getCart.select(undefined)(state);
+const selectCartData = (state: RootState) => selectCartResult(state)?.data;
+
+const selectCartState = (state: RootState) => selectCartData(state);
+const selectCartItems = (state: RootState) => selectCartData(state)?.items ?? [];
+const selectCartDiscount = (state: RootState) => selectCartData(state)?.discount ?? 0;
+const selectCartDiscountType = (state: RootState) =>
+  selectCartData(state)?.discountType ?? "fixed";
 
 /** Item line total (price + modifiers) * quantity. Memoized on items reference. */
 export const selectCartSubtotal = createSelector(
@@ -52,12 +57,17 @@ export const selectCartTotals = createSelector(
   })
 );
 
-/** Cart state needed for checkout (order type + payment). Memoized on cart slice. */
+/** Cart state needed for checkout (order type + payment). Memoized on cart API data. */
 export const selectCartCheckoutMeta = createSelector(
   [selectCartState],
-  (cart) => ({ orderType: cart.orderType, paymentMethod: cart.paymentMethod })
+  (cart) => ({
+    orderType: cart?.orderType ?? "dine-in",
+    paymentMethod: cart?.paymentMethod ?? "cash",
+  })
 );
 
 export { selectCartDiscount };
-export const selectCartOrderType = (state: RootState) => state.cart.orderType;
-export const selectCartPaymentMethod = (state: RootState) => state.cart.paymentMethod;
+export const selectCartOrderType = (state: RootState) =>
+  selectCartData(state)?.orderType ?? "dine-in";
+export const selectCartPaymentMethod = (state: RootState) =>
+  selectCartData(state)?.paymentMethod ?? "cash";

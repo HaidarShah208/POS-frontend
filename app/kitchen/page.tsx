@@ -5,16 +5,15 @@ import Link from "next/link";
 import { motion, AnimatePresence } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { KDSOrderCard } from "@/components/kitchen/KDSOrderCard";
-import { useAppSelector, useAppDispatch } from "@/hooks/redux";
-import { updateOrderStatus } from "@/redux/api/kitchen";
+import { useGetKitchenOrdersQuery, useUpdateOrderStatusMutation } from "@/redux/api/kitchen";
 import type { KitchenOrderStatus } from "@/types/api";
 import { cn } from "@/lib/utils";
 
 type Filter = "ALL" | "NEW" | "PREPARING" | "READY";
 
 export default function KitchenPage() {
-  const orders = useAppSelector((s) => s.kitchen.orders);
-  const dispatch = useAppDispatch();
+  const { data: orders = [] } = useGetKitchenOrdersQuery();
+  const [updateOrderStatus] = useUpdateOrderStatusMutation();
   const [filter, setFilter] = useState<Filter>("ALL");
   const listRef = useRef<HTMLDivElement>(null);
 
@@ -33,7 +32,7 @@ export default function KitchenPage() {
   }, [orders, filter]);
 
   const handleStatusChange = (orderId: string, status: KitchenOrderStatus) => {
-    dispatch(updateOrderStatus({ orderId, status }));
+    updateOrderStatus({ orderId, status });
   };
 
   // New orders arrive from POS when an order is placed (addOrder dispatched from CheckoutDrawer).

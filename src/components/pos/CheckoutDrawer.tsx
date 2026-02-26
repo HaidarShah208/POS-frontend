@@ -15,15 +15,19 @@ import { OrderTypeSelector } from "./OrderTypeSelector";
 import { PaymentMethodSelector } from "./PaymentMethodSelector";
 import { TokenDisplay } from "./TokenDisplay";
 import { CheckoutStepper, type CheckoutStep } from "./CheckoutStepper";
-import { useAppSelector, useAppDispatch } from "@/hooks/redux";
+import { useAppSelector } from "@/hooks/redux";
 import {
   selectCartItems,
   selectCartTotals,
   selectCartCheckoutMeta,
 } from "@/redux/selectors";
-import { setOrderType, setPaymentMethod, clearCart } from "@/redux/api/cart";
+import {
+  useSetOrderTypeMutation,
+  useSetPaymentMethodMutation,
+  useClearCartMutation,
+} from "@/redux/api/cart";
 import { usePlaceOrderMutation } from "@/redux/api/orderSession";
-import { addOrder } from "@/redux/api/kitchen";
+import { useAddOrderMutation } from "@/redux/api/kitchen";
 import { buildKitchenOrderFromCart } from "@/lib/mockOrderGenerator";
 import { formatCurrency } from "@/lib/utils";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -46,7 +50,10 @@ const STEP_ORDER: CheckoutStep[] = [
 export function CheckoutDrawer({ open, onOpenChange, onSuccessClose }: CheckoutDrawerProps) {
   const [step, setStep] = useState(0);
   const [placedToken, setPlacedToken] = useState<string | null>(null);
-  const dispatch = useAppDispatch();
+  const [setOrderType] = useSetOrderTypeMutation();
+  const [setPaymentMethod] = useSetPaymentMethodMutation();
+  const [clearCart] = useClearCartMutation();
+  const [addOrder] = useAddOrderMutation();
   const items = useAppSelector(selectCartItems);
   const { subtotal, tax, discountAmount, grandTotal } = useAppSelector(selectCartTotals);
   const { orderType, paymentMethod } = useAppSelector(selectCartCheckoutMeta);
@@ -81,8 +88,8 @@ export function CheckoutDrawer({ open, onOpenChange, onSuccessClose }: CheckoutD
       }).unwrap();
       setPlacedToken(result.token);
       const kitchenOrder = buildKitchenOrderFromCart(items, orderType, result.token, result.orderId);
-      dispatch(addOrder(kitchenOrder));
-      dispatch(clearCart());
+      addOrder(kitchenOrder);
+      clearCart();
       setStep(5);
     } catch {
       setStep(3);
@@ -164,7 +171,7 @@ export function CheckoutDrawer({ open, onOpenChange, onSuccessClose }: CheckoutD
                 animate={{ opacity: 1, x: 0 }}
                 exit={{ opacity: 0, x: -10 }}
               >
-                <OrderTypeSelector value={orderType} onChange={(v) => dispatch(setOrderType(v))} />
+                <OrderTypeSelector value={orderType} onChange={(v) => setOrderType(v)} />
               </motion.div>
             )}
 
@@ -175,7 +182,7 @@ export function CheckoutDrawer({ open, onOpenChange, onSuccessClose }: CheckoutD
                 animate={{ opacity: 1, x: 0 }}
                 exit={{ opacity: 0, x: -10 }}
               >
-                <PaymentMethodSelector value={paymentMethod} onChange={(v) => dispatch(setPaymentMethod(v))} />
+                <PaymentMethodSelector value={paymentMethod} onChange={(v) => setPaymentMethod(v)} />
               </motion.div>
             )}
 

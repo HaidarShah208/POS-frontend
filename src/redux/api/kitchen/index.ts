@@ -1,1 +1,6 @@
-export { default as kitchenReducer, addOrder, updateOrderStatus, setOrders } from "./kitchenSlice";
+export {
+  kitchenApi,
+  useGetKitchenOrdersQuery,
+  useAddOrderMutation,
+  useUpdateOrderStatusMutation,
+} from "./kitchen";

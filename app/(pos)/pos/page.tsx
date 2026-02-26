@@ -10,13 +10,13 @@ import { CheckoutDrawer } from "@/components/pos/CheckoutDrawer";
 import { Button } from "@/components/ui/button";
 import { MOCK_CATEGORIES } from "@/lib/mock-data";
 import { MOCK_PRODUCTS } from "@/lib/mock-data";
-import { useAppDispatch } from "@/hooks/redux";
-import { addToCart } from "@/redux/api/cart";
+import { useAddToCartMutation, useGetCartQuery } from "@/redux/api/cart";
 import { usePosKeyboardShortcuts } from "@/hooks/usePosKeyboardShortcuts";
 import type { Product } from "@/types";
 
 export default function POSPage() {
-  const dispatch = useAppDispatch();
+  useGetCartQuery(); // Prime cart cache so selectors have data
+  const [addToCart] = useAddToCartMutation();
   const [activeCategoryId, setActiveCategoryId] = useState<string | null>(MOCK_CATEGORIES[0]?.id ?? null);
   const [categoryIdToScroll, setCategoryIdToScroll] = useState<string | null>(null);
   const [cartDrawerOpen, setCartDrawerOpen] = useState(false);
@@ -43,16 +43,14 @@ export default function POSPage() {
 
   const handleAddToCart = useCallback(
     (product: Product) => {
-      dispatch(
-        addToCart({
-          productId: product.id,
-          name: product.name,
-          price: product.price,
-          image: product.image,
-        })
-      );
+      addToCart({
+        productId: product.id,
+        name: product.name,
+        price: product.price,
+        image: product.image,
+      });
     },
-    [dispatch]
+    [addToCart]
   );
 
   return (

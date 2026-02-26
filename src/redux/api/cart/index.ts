@@ -1,15 +1,15 @@
-export { cartApi, useSubmitOrderMutation } from "./cart";
 export {
-  addToCart,
-  removeFromCart,
-  increaseQty,
-  decreaseQty,
-  setItemNote,
-  setItemModifiers,
-  setDiscount,
-  setDiscountType,
-  setOrderType,
-  setPaymentMethod,
-  clearCart,
-} from "./cartSlice";
-export { default as cartReducer } from "./cartSlice";
+  cartApi,
+  useGetCartQuery,
+  useAddToCartMutation,
+  useRemoveFromCartMutation,
+  useIncreaseQtyMutation,
+  useDecreaseQtyMutation,
+  useSetItemNoteMutation,
+  useSetItemModifiersMutation,
+  useSetDiscountMutation,
+  useSetDiscountTypeMutation,
+  useSetOrderTypeMutation,
+  useSetPaymentMethodMutation,
+  useClearCartMutation,
+} from "./cart";
