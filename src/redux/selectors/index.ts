@@ -9,4 +9,9 @@ export {
   selectCartTax,
   selectCartDiscount,
   selectCartGrandTotal,
+  selectDiscountAmount,
+  selectCartTotals,
+  selectCartCheckoutMeta,
+  selectCartOrderType,
+  selectCartPaymentMethod,
 } from "./cartCalculation";

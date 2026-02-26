@@ -1,4 +1,11 @@
 import type { Category, Product, Order, StaffMember } from "@/types";
+import type { CartItemModifier } from "@/types";
+
+export const MOCK_MODIFIERS: CartItemModifier[] = [
+  { id: "mod-1", name: "Extra Cheese", price: 0.99 },
+  { id: "mod-2", name: "Bacon", price: 1.49 },
+  { id: "mod-3", name: "Large Size", price: 1.0 },
+];
 
 export const MOCK_CATEGORIES: Category[] = [
   { id: "cat-1", name: "Burgers", slug: "burgers", sortOrder: 1 },

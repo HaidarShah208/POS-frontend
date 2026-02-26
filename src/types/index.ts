@@ -1,3 +1,10 @@
+/** Modifier/addon for a cart item */
+export interface CartItemModifier {
+  id: string;
+  name: string;
+  price: number;
+}
+
 export interface CartItem {
   id: string;
   productId: string;
@@ -5,6 +12,8 @@ export interface CartItem {
   price: number;
   quantity: number;
   image?: string;
+  note?: string;
+  modifiers?: CartItemModifier[];
 }
 
 export interface AddToCartPayload {
@@ -13,13 +22,27 @@ export interface AddToCartPayload {
   price: number;
   image?: string;
   quantity?: number;
+  note?: string;
+  modifiers?: CartItemModifier[];
 }
+
+/** Order type for checkout */
+export type OrderType = "dine-in" | "takeaway" | "delivery";
+
+/** Payment method for checkout */
+export type PaymentMethod = "cash" | "card" | "mobile" | "other";
+
+/** Discount application */
+export type DiscountType = "fixed" | "percent";
 
 /** Redux cart slice state */
 export interface CartState {
   items: CartItem[];
   totalQuantity: number;
   discount: number;
+  discountType: DiscountType;
+  orderType: OrderType;
+  paymentMethod: PaymentMethod;
 }
 
 export interface Product {

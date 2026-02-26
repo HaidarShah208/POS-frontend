@@ -1,26 +1,27 @@
 "use client";
 
+import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { formatCurrency } from "@/lib/utils";
 import {
   selectCartItems,
-  selectCartSubtotal,
-  selectCartTax,
-  selectCartDiscount,
-  selectCartGrandTotal,
+  selectCartTotals,
   selectCartIsEmpty,
 } from "@/redux/selectors";
 import { useAppSelector, useAppDispatch } from "@/hooks/redux";
 import { increaseQty, decreaseQty, removeFromCart, clearCart } from "@/redux/api/cart";
+import { ClearCartModal } from "./ClearCartModal";
 
-export function CartPanel() {
+type CartPanelProps = {
+  onCheckoutClick?: () => void;
+};
+
+export function CartPanel({ onCheckoutClick }: CartPanelProps) {
   const dispatch = useAppDispatch();
+  const [clearModalOpen, setClearModalOpen] = useState(false);
   const items = useAppSelector(selectCartItems);
-  const subtotal = useAppSelector(selectCartSubtotal);
-  const tax = useAppSelector(selectCartTax);
-  const discount = useAppSelector(selectCartDiscount);
-  const grandTotal = useAppSelector(selectCartGrandTotal);
+  const { subtotal, tax, discountAmount, grandTotal } = useAppSelector(selectCartTotals);
   const isEmpty = useAppSelector(selectCartIsEmpty);
 
   return (
@@ -94,10 +95,10 @@ export function CartPanel() {
           <span className="text-[var(--muted-foreground)]">Tax</span>
           <span>{formatCurrency(tax)}</span>
         </div>
-        {discount > 0 && (
+        {discountAmount > 0 && (
           <div className="flex justify-between text-sm">
             <span className="text-[var(--muted-foreground)]">Discount</span>
-            <span>-{formatCurrency(discount)}</span>
+            <span className="text-[var(--destructive)]">-{formatCurrency(discountAmount)}</span>
           </div>
         )}
         <div className="flex justify-between font-semibold text-lg pt-2">
@@ -107,17 +108,32 @@ export function CartPanel() {
         <Button
           className="w-full mt-4"
           size="lg"
+          variant="outline"
           disabled={isEmpty}
-          onClick={() => dispatch(clearCart())}
+          onClick={() => setClearModalOpen(true)}
         >
           Clear cart
         </Button>
       </div>
-      <div className="p-4 border-t border-[var(--border)]">
-        <Button className="w-full" size="xl" variant="accent" disabled={isEmpty}>
+      <div className="p-4 border-t border-[var(--border)] sticky bottom-0 bg-[var(--background)]">
+        <Button
+          className="w-full pos-touch min-h-[48px]"
+          size="xl"
+          variant="accent"
+          disabled={isEmpty}
+          onClick={onCheckoutClick}
+        >
           Checkout — {formatCurrency(grandTotal)}
         </Button>
+        <p className="mt-2 text-center text-xs text-[var(--muted-foreground)] hidden lg:block">
+          F2 Checkout · F3 Cart · Ctrl+Enter Pay
+        </p>
       </div>
+      <ClearCartModal
+        open={clearModalOpen}
+        onOpenChange={setClearModalOpen}
+        onConfirm={() => dispatch(clearCart())}
+      />
     </div>
   );
 }
