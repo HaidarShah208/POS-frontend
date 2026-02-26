@@ -24,10 +24,11 @@ export const kitchenApi = createApi({
       { orderId: string; status: KitchenOrderStatus }
     >({
       queryFn: ({ orderId, status }) => {
-        const order = orders.find((o) => o.id === orderId);
-        if (order) {
-          order.status = status;
-          order.updatedAt = new Date().toISOString();
+        const idx = orders.findIndex((o) => o.id === orderId);
+        if (idx !== -1) {
+          const order = orders[idx];
+          const updated = { ...order, status, updatedAt: new Date().toISOString() };
+          orders = [...orders.slice(0, idx), updated, ...orders.slice(idx + 1)];
         }
         return { data: undefined };
       },

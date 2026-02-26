@@ -14,6 +14,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { formatCurrency } from "@/lib/utils";
 import { cn } from "@/lib/utils";
+import type { POSPreferences } from "@/types/settings";
 
 type TabId = "general" | "tax" | "receipt" | "payment" | "pos";
 
@@ -334,8 +335,8 @@ function POSSection({
   settings,
   onChange,
 }: {
-  settings: { defaultOrderType: string; autoPrintReceipt: boolean; soundOnNewOrder: boolean; kitchenAutoAccept: boolean };
-  onChange: (p: Partial<typeof settings>) => void;
+  settings: POSPreferences;
+  onChange: (p: Partial<POSPreferences>) => void;
 }) {
   return (
     <motion.section
@@ -349,7 +350,7 @@ function POSSection({
           <label className="text-sm text-[var(--muted-foreground)]">Default order type</label>
           <select
             value={settings.defaultOrderType}
-            onChange={(e) => onChange({ defaultOrderType: e.target.value })}
+            onChange={(e) => onChange({ defaultOrderType: e.target.value as POSPreferences["defaultOrderType"] })}
             className="mt-1 w-full rounded-lg border border-[var(--border)] bg-[var(--background)] px-3 py-2 text-sm"
           >
             <option value="dine-in">Dine-in</option>
