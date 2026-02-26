@@ -7,6 +7,21 @@ export interface CartItem {
   image?: string;
 }
 
+export interface AddToCartPayload {
+  productId: string;
+  name: string;
+  price: number;
+  image?: string;
+  quantity?: number;
+}
+
+/** Redux cart slice state */
+export interface CartState {
+  items: CartItem[];
+  totalQuantity: number;
+  discount: number;
+}
+
 export interface Product {
   id: string;
   name: string;
@@ -49,3 +64,5 @@ export interface User {
   name: string;
   role: string;
 }
+
+export type { SubmitOrderRequest, SubmitOrderResponse } from "./api";

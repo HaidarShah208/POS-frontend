@@ -12,7 +12,7 @@ import {
   selectCartIsEmpty,
 } from "@/redux/selectors";
 import { useAppSelector, useAppDispatch } from "@/hooks/redux";
-import { increaseQty, decreaseQty, removeFromCart, clearCart } from "@/redux/slices/cart";
+import { increaseQty, decreaseQty, removeFromCart, clearCart } from "@/redux/api/cart";
 
 export function CartPanel() {
   const dispatch = useAppDispatch();

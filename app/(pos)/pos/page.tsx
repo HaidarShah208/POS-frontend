@@ -10,7 +10,7 @@ import { Button } from "@/components/ui/button";
 import { MOCK_CATEGORIES } from "@/lib/mock-data";
 import { MOCK_PRODUCTS } from "@/lib/mock-data";
 import { useAppDispatch } from "@/hooks/redux";
-import { addToCart } from "@/redux/slices/cart";
+import { addToCart } from "@/redux/api/cart";
 import type { Product } from "@/types";
 
 export default function POSPage() {
