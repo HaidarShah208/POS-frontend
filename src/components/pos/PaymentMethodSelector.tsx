@@ -7,7 +7,6 @@ const METHODS: { value: PaymentMethod; label: string }[] = [
   { value: "cash", label: "Cash" },
   { value: "card", label: "Card" },
   { value: "mobile", label: "Mobile" },
-  { value: "other", label: "Other" },
 ];
 
 interface PaymentMethodSelectorProps {
