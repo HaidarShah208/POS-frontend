@@ -41,16 +41,10 @@ export function Topbar({ onMenuClick }: TopbarProps) {
     router.push("/auth/login");
   };
 
-  const handleGlobalSearch = () => {
-    if (searchQuery.trim()) {
-      router.push(`/products?q=${encodeURIComponent(searchQuery.trim())}`);
-      setSearchQuery("");
-      setSearchOpen(false);
-    }
-  };
+ 
 
   return (
-    <header className="sticky top-0 z-40 flex justify-between h-14 items-center gap-4 border-b border-(--border) bg-background px-4">
+    <header className="sticky top-0 z-40 flex justify-between h-15 items-center gap-4 border-b border-(--border) bg-background px-4">
       <div className="flex flex-1 items-center gap-2 max-w-xl">
         <Button
           variant="ghost"
@@ -63,19 +57,7 @@ export function Topbar({ onMenuClick }: TopbarProps) {
             <path d="M4 6h16M4 12h16M4 18h16" />
           </svg>
         </Button>
-        <div className="hidden sm:flex flex-1 relative">
-          <Input
-            placeholder="Search products & orders..."
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            onFocus={() => setSearchOpen(true)}
-            onKeyDown={(e) => e.key === "Enter" && handleGlobalSearch()}
-            className="pl-9"
-          />
-          <svg className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[var(--muted-foreground)]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-          </svg>
-        </div>
+      
         <span className="text-sm font-medium text-[var(--muted-foreground)] sm:hidden">POS</span>
       </div>
 

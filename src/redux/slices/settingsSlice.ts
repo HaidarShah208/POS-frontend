@@ -31,8 +31,8 @@ const defaults: SettingsState = {
   paymentMethods: [
     { id: "cash", name: "Cash", enabled: true },
     { id: "card", name: "Card", enabled: true },
-    { id: "easypaisa", name: "EasyPaisa", enabled: true },
-    { id: "jazzcash", name: "JazzCash", enabled: true },
+    { id: "mobile", name: "Mobile", enabled: true },
+ 
   ],
   pos: {
     defaultOrderType: "dine-in",

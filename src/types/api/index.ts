@@ -134,6 +134,7 @@ export interface PaginatedResponse<T> {
 
 /** Place order request (matches cart + totals) */
 export interface PlaceOrderRequest {
+  branchId?: string;
   items: { id: string; productId: string; name: string; price: number; quantity: number; note?: string; modifiers?: ProductModifier[] }[];
   subtotal?: number;
   tax?: number;

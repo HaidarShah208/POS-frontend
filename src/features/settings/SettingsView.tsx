@@ -26,7 +26,6 @@ type TabId = "general" | "categories" | "tax" | "receipt" | "payment" | "pos";
 const TABS: { id: TabId; label: string }[] = [
   { id: "general", label: "General" },
   { id: "categories", label: "Categories" },
-  { id: "tax", label: "Tax & Charges" },
   { id: "receipt", label: "Receipt Designer" },
   { id: "payment", label: "Payment Methods" },
   { id: "pos", label: "POS Preferences" },
@@ -96,9 +95,7 @@ export function SettingsView() {
           <CategoriesSection />
         )}
 
-        {activeTab === "tax" && (
-          <TaxSection settings={settings.tax} onChange={(p) => { dispatch(setTax(p)); markDirty(); }} />
-        )}
+      
 
         {activeTab === "receipt" && (
           <ReceiptSection settings={settings.receipt} onChange={(p) => { dispatch(setReceipt(p)); markDirty(); }} />
@@ -229,89 +226,7 @@ function CategoriesSection() {
   );
 }
 
-function TaxSection({
-  settings,
-  onChange,
-}: {
-  settings: { taxName: string; taxPercentage: number; serviceCharge: number; taxEnabled: boolean; serviceChargeEnabled: boolean };
-  onChange: (p: Partial<typeof settings>) => void;
-}) {
-  const subtotal = 100;
-  const tax = settings.taxEnabled ? (subtotal * settings.taxPercentage) / 100 : 0;
-  const service = settings.serviceChargeEnabled ? (subtotal * settings.serviceCharge) / 100 : 0;
-  const total = subtotal + tax + service;
-
-  return (
-    <motion.section
-      initial={{ opacity: 0, y: 8 }}
-      animate={{ opacity: 1, y: 0 }}
-      className="space-y-6"
-    >
-      <h2 className="text-lg font-semibold">Tax & Service Charges</h2>
-      <div className="grid gap-4 max-w-md">
-        <label className="flex items-center gap-2">
-          <input
-            type="checkbox"
-            checked={settings.taxEnabled}
-            onChange={(e) => onChange({ taxEnabled: e.target.checked })}
-            className="rounded border-[var(--border)]"
-          />
-          <span className="text-sm">Enable tax</span>
-        </label>
-        <div>
-          <label className="text-sm text-[var(--muted-foreground)]">Tax name</label>
-          <Input
-            value={settings.taxName}
-            onChange={(e) => onChange({ taxName: e.target.value })}
-            className="mt-1"
-          />
-        </div>
-        <div>
-          <label className="text-sm text-[var(--muted-foreground)]">Tax percentage</label>
-          <Input
-            type="number"
-            min={0}
-            max={100}
-            step={0.5}
-            value={settings.taxPercentage}
-            onChange={(e) => onChange({ taxPercentage: Number(e.target.value) || 0 })}
-            className="mt-1"
-          />
-        </div>
-        <label className="flex items-center gap-2">
-          <input
-            type="checkbox"
-            checked={settings.serviceChargeEnabled}
-            onChange={(e) => onChange({ serviceChargeEnabled: e.target.checked })}
-            className="rounded border-[var(--border)]"
-          />
-          <span className="text-sm">Enable service charge</span>
-        </label>
-        <div>
-          <label className="text-sm text-[var(--muted-foreground)]">Service charge %</label>
-          <Input
-            type="number"
-            min={0}
-            max={100}
-            step={0.5}
-            value={settings.serviceCharge}
-            onChange={(e) => onChange({ serviceCharge: Number(e.target.value) || 0 })}
-            className="mt-1"
-          />
-        </div>
-      </div>
-      <div className="rounded-lg border border-[var(--border)] p-4 max-w-md bg-[var(--muted)]/30">
-        <p className="text-sm font-medium mb-2">Live preview (subtotal $100)</p>
-        <div className="text-sm space-y-1">
-          <div className="flex justify-between"><span>Subtotal</span><span>{formatCurrency(subtotal)}</span></div>
-          {settings.taxEnabled && <div className="flex justify-between"><span>{settings.taxName}</span><span>{formatCurrency(tax)}</span></div>}
-          {settings.serviceChargeEnabled && <div className="flex justify-between"><span>Service charge</span><span>{formatCurrency(service)}</span></div>}
-          <div className="flex justify-between font-semibold pt-2 border-t border-[var(--border)]"><span>Total</span><span>{formatCurrency(total)}</span></div>
-        </div>
-      </div>
-    </motion.section>
-  );
-}
+ 
 
 function ReceiptSection({
   settings,
@@ -429,9 +344,7 @@ function PaymentSection({
             />
           </label>
         ))}
-        <Button type="button" variant="outline" size="sm" disabled title="Add custom (UI only)">
-          + Add custom payment method
-        </Button>
+    
       </div>
     </motion.section>
   );
@@ -468,14 +381,7 @@ function POSSection({
           <span className="text-sm">Auto print receipt</span>
           <input type="checkbox" checked={settings.autoPrintReceipt} onChange={(e) => onChange({ autoPrintReceipt: e.target.checked })} className="rounded border-[var(--border)]" />
         </label>
-        <label className="flex items-center justify-between gap-4 p-3 rounded-lg border border-[var(--border)]">
-          <span className="text-sm">Sound on new order</span>
-          <input type="checkbox" checked={settings.soundOnNewOrder} onChange={(e) => onChange({ soundOnNewOrder: e.target.checked })} className="rounded border-[var(--border)]" />
-        </label>
-        <label className="flex items-center justify-between gap-4 p-3 rounded-lg border border-[var(--border)]">
-          <span className="text-sm">Kitchen auto accept</span>
-          <input type="checkbox" checked={settings.kitchenAutoAccept} onChange={(e) => onChange({ kitchenAutoAccept: e.target.checked })} className="rounded border-[var(--border)]" />
-        </label>
+      
       </div>
     </motion.section>
   );

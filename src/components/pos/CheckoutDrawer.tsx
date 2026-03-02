@@ -29,6 +29,7 @@ import {
 import { usePlaceOrderMutation } from "@/redux/api/ordersEndpoints";
 import { formatCurrency } from "@/lib/utils";
 import { Skeleton } from "@/components/ui/skeleton";
+import { toast } from "sonner";
 
 interface CheckoutDrawerProps {
   open: boolean;
@@ -54,6 +55,7 @@ export function CheckoutDrawer({ open, onOpenChange, onSuccessClose }: CheckoutD
   const items = useAppSelector(selectCartItems);
   const { subtotal, tax, discountAmount, grandTotal } = useAppSelector(selectCartTotals);
   const { orderType, paymentMethod } = useAppSelector(selectCartCheckoutMeta);
+  const user = useAppSelector((s) => s.auth?.user);
   const [placeOrder, { isLoading }] = usePlaceOrderMutation();
 
   const canProceed = items.length > 0;
@@ -75,6 +77,7 @@ export function CheckoutDrawer({ open, onOpenChange, onSuccessClose }: CheckoutD
   const handlePlaceOrder = async () => {
     try {
       const result = await placeOrder({
+        ...(user?.branchId && { branchId: user.branchId }),
         items,
         subtotal,
         tax,
@@ -86,7 +89,12 @@ export function CheckoutDrawer({ open, onOpenChange, onSuccessClose }: CheckoutD
       setPlacedToken(result.tokenNumber);
       clearCart();
       setStep(5);
-    } catch {
+    } catch (err: unknown) {
+      const msg =
+        (err as { data?: { error?: string } })?.data?.error ??
+        (err as Error)?.message ??
+        "Failed to place order";
+      toast.error(msg);
       setStep(3);
     }
   };
