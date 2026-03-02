@@ -26,9 +26,7 @@ import {
   useSetPaymentMethodMutation,
   useClearCartMutation,
 } from "@/redux/api/cart";
-import { usePlaceOrderMutation } from "@/redux/api/orderSession";
-import { useAddOrderMutation } from "@/redux/api/kitchen";
-import { buildKitchenOrderFromCart } from "@/lib/mockOrderGenerator";
+import { usePlaceOrderMutation } from "@/redux/api/ordersEndpoints";
 import { formatCurrency } from "@/lib/utils";
 import { Skeleton } from "@/components/ui/skeleton";
 
@@ -53,7 +51,6 @@ export function CheckoutDrawer({ open, onOpenChange, onSuccessClose }: CheckoutD
   const [setOrderType] = useSetOrderTypeMutation();
   const [setPaymentMethod] = useSetPaymentMethodMutation();
   const [clearCart] = useClearCartMutation();
-  const [addOrder] = useAddOrderMutation();
   const items = useAppSelector(selectCartItems);
   const { subtotal, tax, discountAmount, grandTotal } = useAppSelector(selectCartTotals);
   const { orderType, paymentMethod } = useAppSelector(selectCartCheckoutMeta);
@@ -86,9 +83,7 @@ export function CheckoutDrawer({ open, onOpenChange, onSuccessClose }: CheckoutD
         orderType,
         paymentMethod,
       }).unwrap();
-      setPlacedToken(result.token);
-      const kitchenOrder = buildKitchenOrderFromCart(items, orderType, result.token, result.orderId);
-      addOrder(kitchenOrder);
+      setPlacedToken(result.tokenNumber);
       clearCart();
       setStep(5);
     } catch {

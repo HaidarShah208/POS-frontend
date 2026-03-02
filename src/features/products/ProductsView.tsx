@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo, useCallback } from "react";
+import { useState, useMemo, useCallback, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
@@ -17,7 +17,7 @@ import {
   useCreateProductMutation,
   useUpdateProductMutation,
   useDeleteProductMutation,
-} from "@/redux/api/products";
+} from "@/redux/api/productsEndpoints";
 import type { AdminProduct } from "@/types/admin";
 import { formatCurrency } from "@/lib/utils";
 import { Badge } from "@/components/ui/badge";
@@ -34,8 +34,9 @@ type ProductFormValues = {
 };
 
 export function ProductsView() {
-  const { data: products = [], isLoading } = useGetProductsQuery();
-  const { data: categories = [] } = useGetCategoriesQuery();
+  const { data: productsResponse, isLoading } = useGetProductsQuery();
+  const products = productsResponse?.data ?? [];
+  const { data: categories = [], isLoading: categoriesLoading } = useGetCategoriesQuery();
   const [createProduct] = useCreateProductMutation();
   const [updateProduct] = useUpdateProductMutation();
   const [deleteProduct] = useDeleteProductMutation();
@@ -47,7 +48,7 @@ export function ProductsView() {
   const form = useForm<ProductFormValues>({
     defaultValues: {
       name: "",
-      categoryId: categories[0]?.id ?? "",
+      categoryId: "",
       price: "",
       cost: "",
       sku: "",
@@ -55,6 +56,16 @@ export function ProductsView() {
       status: "active",
     },
   });
+
+  // When categories load and form has no valid category in create mode, set to first category
+  useEffect(() => {
+    const firstId = categories[0]?.id;
+    if (!firstId || editing) return;
+    const current = form.getValues("categoryId");
+    if (!current || !categories.some((c) => c.id === current)) {
+      form.setValue("categoryId", firstId);
+    }
+  }, [categories, editing, form]);
   const openEdit = useCallback(
     (row: AdminProduct) => {
       setEditing(row);
@@ -202,7 +213,11 @@ export function ProductsView() {
               <select
                 {...form.register("categoryId", { required: true })}
                 className="mt-1 w-full rounded-lg border border-[var(--border)] bg-transparent px-3 py-2 text-sm"
+                disabled={categoriesLoading}
               >
+                <option value="">
+                  {categoriesLoading ? "Loading…" : categories.length === 0 ? "No categories yet" : "Select category"}
+                </option>
                 {categories.map((c) => (
                   <option key={c.id} value={c.id}>{c.name}</option>
                 ))}

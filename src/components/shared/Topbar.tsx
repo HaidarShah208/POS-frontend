@@ -6,7 +6,7 @@ import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useAppSelector, useAppDispatch } from "@/hooks/redux";
-import { logout } from "@/redux/api/auth";
+import { logout, saveAuthToStorage } from "@/redux/api/auth";
 import { cn } from "@/lib/utils";
 
 type TopbarProps = {
@@ -37,6 +37,7 @@ export function Topbar({ onMenuClick }: TopbarProps) {
 
   const handleLogout = () => {
     dispatch(logout());
+    saveAuthToStorage(null);
     router.push("/auth/login");
   };
 

@@ -2,14 +2,13 @@
 
 import { useState } from "react";
 import { motion } from "framer-motion";
-import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { PageHeader } from "@/components/admin/PageHeader";
 import { StatsCard } from "@/components/admin/StatsCard";
 import { RoleGuard } from "@/components/auth/RoleGuard";
-import { useGetInventoryQuery } from "@/redux/api/inventory";
+import { useGetInventoryQuery, useAdjustStockMutation } from "@/redux/api/inventoryEndpoints";
+import { useGetBranchesQuery } from "@/redux/api/branchesEndpoints";
 import { formatCurrency } from "@/lib/utils";
-import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import {
   Modal,
@@ -20,30 +19,40 @@ import {
   ModalClose,
 } from "@/components/ui/modal";
 import { Input } from "@/components/ui/input";
-import { useAdjustStockMutation, useGetStockHistoryQuery } from "@/redux/api/inventory";
 import { cn } from "@/lib/utils";
 
 export default function InventoryPage() {
-  const { data: inventory = [] } = useGetInventoryQuery();
+  const { data: inventoryResponse } = useGetInventoryQuery();
+  const inventory = inventoryResponse?.data ?? [];
+  const { data: branches = [] } = useGetBranchesQuery();
+  const branchId = branches[0]?.id ?? "";
   const [adjustProductId, setAdjustProductId] = useState<string | null>(null);
   const [historyProductId, setHistoryProductId] = useState<string | null>(null);
   const [adjustType, setAdjustType] = useState<"add" | "remove">("add");
   const [quantity, setQuantity] = useState("");
   const [reason, setReason] = useState("");
   const [adjustStock, { isLoading }] = useAdjustStockMutation();
-  const { data: history = [] } = useGetStockHistoryQuery(historyProductId ?? "", {
-    skip: !historyProductId,
-  });
+  const history: { id: string; type: string; quantity: number; reason: string; date: string }[] = [];
 
+  function itemStatus(i: (typeof inventory)[0]): "in_stock" | "low_stock" | "out_of_stock" {
+    if (i.status) return i.status;
+    if (i.currentStock <= 0) return "out_of_stock";
+    const threshold = i.lowStockThreshold ?? 10;
+    return i.currentStock <= threshold ? "low_stock" : "in_stock";
+  }
+  function itemStockValue(i: (typeof inventory)[0]): number {
+    return i.stockValue ?? i.currentStock * (i.cost ?? 0);
+  }
   const totalItems = inventory.length;
-  const lowStock = inventory.filter((i) => i.status === "low_stock").length;
-  const outOfStock = inventory.filter((i) => i.status === "out_of_stock").length;
-  const totalValue = inventory.reduce((s, i) => s + i.stockValue, 0);
+  const lowStock = inventory.filter((i) => itemStatus(i) === "low_stock").length;
+  const outOfStock = inventory.filter((i) => itemStatus(i) === "out_of_stock").length;
+  const totalValue = inventory.reduce((s, i) => s + itemStockValue(i), 0);
 
   const handleAdjust = async () => {
-    if (!adjustProductId || !quantity || !reason) return;
+    if (!adjustProductId || !quantity || !reason || !branchId) return;
     await adjustStock({
       productId: adjustProductId,
+      branchId,
       type: adjustType,
       quantity: Number(quantity),
       reason,
@@ -85,32 +94,36 @@ export default function InventoryPage() {
               </tr>
             </thead>
             <tbody>
-              {inventory.map((item) => (
+              {inventory.map((item) => {
+                const status = itemStatus(item);
+                const productName = item.productName ?? item.product?.name ?? item.productId;
+                const cost = item.cost ?? 0;
+                return (
                 <tr
                   key={item.productId}
                   className={cn(
                     "border-b border-[var(--border)] hover:bg-[var(--muted)]/30",
-                    item.status === "low_stock" && "bg-amber-500/10",
-                    item.status === "out_of_stock" && "bg-red-500/10"
+                    status === "low_stock" && "bg-amber-500/10",
+                    status === "out_of_stock" && "bg-red-500/10"
                   )}
                 >
-                  <td className="p-4 font-medium">{item.productName}</td>
+                  <td className="p-4 font-medium">{productName}</td>
                   <td className="p-4">{item.currentStock}</td>
-                  <td className="p-4">{formatCurrency(item.cost)}</td>
-                  <td className="p-4">{formatCurrency(item.stockValue)}</td>
+                  <td className="p-4">{formatCurrency(cost)}</td>
+                  <td className="p-4">{formatCurrency(itemStockValue(item))}</td>
                   <td className="p-4">
                     <Badge
                       variant={
-                        item.status === "out_of_stock"
+                        status === "out_of_stock"
                           ? "destructive"
-                          : item.status === "low_stock"
+                          : status === "low_stock"
                             ? "secondary"
                             : "default"
                       }
                     >
-                      {item.status === "out_of_stock"
+                      {status === "out_of_stock"
                         ? "Out"
-                        : item.status === "low_stock"
+                        : status === "low_stock"
                           ? "Low"
                           : "In stock"}
                     </Badge>
@@ -124,7 +137,8 @@ export default function InventoryPage() {
                     </Button>
                   </td>
                 </tr>
-              ))}
+              );
+              })}
             </tbody>
           </table>
         </div>
@@ -153,7 +167,7 @@ export default function InventoryPage() {
             </div>
             <ModalFooter>
               <ModalClose asChild><Button variant="outline">Cancel</Button></ModalClose>
-              <Button onClick={handleAdjust} disabled={!quantity || !reason || isLoading}>Apply</Button>
+              <Button onClick={handleAdjust} disabled={!branchId || !quantity || !reason || isLoading}>Apply</Button>
             </ModalFooter>
           </ModalContent>
         </Modal>

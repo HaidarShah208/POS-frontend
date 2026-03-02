@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { StoreProvider } from "@/redux/provider";
+import { AuthRehydrate } from "@/components/auth/AuthRehydrate";
 import { Poppins } from "next/font/google";
 import { TopLoader } from "@/components/shared/TopLoader";
 import "./globals.css";
@@ -22,6 +23,7 @@ export default function RootLayout({
     <html lang="en">
       <body className={`${poppins.variable} antialiased`}>
         <StoreProvider>
+          <AuthRehydrate />
           <TopLoader />
           {children}
         </StoreProvider>

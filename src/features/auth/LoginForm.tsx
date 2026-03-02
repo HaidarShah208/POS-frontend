@@ -6,22 +6,27 @@ import { useDispatch } from "react-redux";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { setUser } from "@/redux/api/auth";
-import { validateLogin } from "@/lib/mock-auth";
+import { setCredentials, saveAuthToStorage } from "@/redux/api/auth";
+import { useLoginMutation } from "@/redux/api/authEndpoints";
+import loginImg from '../../assets/login.jpeg'
+
 
 type LoginFormValues = { email: string; password: string };
 
 export function LoginForm() {
   const router = useRouter();
   const dispatch = useDispatch();
+  const [login, { isLoading }] = useLoginMutation();
   const { register, handleSubmit, setError, formState: { errors } } = useForm<LoginFormValues>();
 
-  const onSubmit = (data: LoginFormValues) => {
-    const user = validateLogin(data.email, data.password);
-    if (user) {
-      dispatch(setUser(user));
+  const onSubmit = async (data: LoginFormValues) => {
+    try {
+      const result = await login({ email: data.email, password: data.password }).unwrap();
+      const payload = { user: result.user, token: result.token };
+      dispatch(setCredentials(payload));
+      saveAuthToStorage(payload);
       router.push("/dashboard");
-    } else {
+    } catch {
       setError("root", { message: "Invalid email or password." });
     }
   };
@@ -47,7 +52,9 @@ export function LoginForm() {
             <Input id="password" type="password" placeholder="••••••••" {...register("password", { required: "Password is required" })} />
             {errors.password && <p className="mt-1 text-xs text-[var(--destructive)]">{errors.password.message}</p>}
           </div>
-          <Button type="submit" className="w-full">Sign in</Button>
+          <Button type="submit" className="w-full" disabled={isLoading}>
+          {isLoading ? "Signing in..." : "Sign in"}
+        </Button>
         </form>
       </CardContent>
     </Card>

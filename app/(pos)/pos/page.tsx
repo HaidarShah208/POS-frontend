@@ -8,19 +8,24 @@ import { CartPanel } from "@/components/pos/CartPanel";
 import { CartDrawer } from "@/components/pos/CartDrawer";
 import { CheckoutDrawer } from "@/components/pos/CheckoutDrawer";
 import { Button } from "@/components/ui/button";
-import { MOCK_CATEGORIES } from "@/lib/mock-data";
-import { MOCK_PRODUCTS } from "@/lib/mock-data";
 import { useAddToCartMutation, useGetCartQuery } from "@/redux/api/cart";
+import { useGetProductsQuery, useGetCategoriesQuery } from "@/redux/api";
 import { usePosKeyboardShortcuts } from "@/hooks/usePosKeyboardShortcuts";
 import type { Product } from "@/types";
 
 export default function POSPage() {
   useGetCartQuery(); // Prime cart cache so selectors have data
+  const { data: productsResponse } = useGetProductsQuery({ limit: 200 });
+  const { data: categories = [] } = useGetCategoriesQuery();
+  const products = productsResponse?.data ?? [];
+  const defaultCategoryId = categories[0]?.id ?? null;
   const [addToCart] = useAddToCartMutation();
-  const [activeCategoryId, setActiveCategoryId] = useState<string | null>(MOCK_CATEGORIES[0]?.id ?? null);
+  const [activeCategoryId, setActiveCategoryId] = useState<string | null>(null);
   const [categoryIdToScroll, setCategoryIdToScroll] = useState<string | null>(null);
   const [cartDrawerOpen, setCartDrawerOpen] = useState(false);
   const [checkoutOpen, setCheckoutOpen] = useState(false);
+
+  const effectiveCategoryId = activeCategoryId ?? defaultCategoryId;
 
   const handleCheckoutClick = useCallback(() => {
     setCartDrawerOpen(false);
@@ -64,16 +69,16 @@ export default function POSPage() {
             </Button>
           </div>
           <CategoryList
-            categories={MOCK_CATEGORIES}
-            activeId={activeCategoryId}
+            categories={categories}
+            activeId={effectiveCategoryId}
             onSelect={handleCategorySelect}
           />
         </aside>
         <section className="flex min-w-0 flex-1 flex-col overflow-hidden">
           <ProductGrid
-            products={MOCK_PRODUCTS}
-            categories={MOCK_CATEGORIES}
-            activeCategoryId={activeCategoryId}
+            products={products}
+            categories={categories}
+            activeCategoryId={effectiveCategoryId}
             categoryIdToScroll={categoryIdToScroll}
             onAddToCart={handleAddToCart}
           />
@@ -101,16 +106,16 @@ export default function POSPage() {
         <div className="flex flex-1 min-h-0 overflow-hidden">
           <aside className="flex w-28 shrink-0 flex-col border-r border-(--border) bg-background sm:w-36">
             <CategoryList
-              categories={MOCK_CATEGORIES}
-              activeId={activeCategoryId}
+              categories={categories}
+              activeId={effectiveCategoryId}
               onSelect={handleCategorySelect}
             />
           </aside>
           <section className="flex min-w-0 flex-1 flex-col overflow-hidden">
             <ProductGrid
-              products={MOCK_PRODUCTS}
-              categories={MOCK_CATEGORIES}
-              activeCategoryId={activeCategoryId}
+              products={products}
+              categories={categories}
+              activeCategoryId={effectiveCategoryId}
               categoryIdToScroll={categoryIdToScroll}
               onAddToCart={handleAddToCart}
             />

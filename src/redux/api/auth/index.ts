@@ -1,1 +1,10 @@
-export { default as authReducer, setUser, setRole, logout } from "./authSlice";
+export {
+  default as authReducer,
+  setUser,
+  setCredentials,
+  setRole,
+  logout,
+  setRehydrated,
+  loadStoredAuth,
+  saveAuthToStorage,
+} from "./authSlice";

@@ -1,41 +1,60 @@
 "use client";
 
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useMemo } from "react";
 import Link from "next/link";
 import { motion, AnimatePresence } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { KDSOrderCard } from "@/components/kitchen/KDSOrderCard";
-import { useGetKitchenOrdersQuery, useUpdateOrderStatusMutation } from "@/redux/api/kitchen";
-import type { KitchenOrderStatus } from "@/types/api";
+import { useGetKitchenOrdersQuery, useUpdateKitchenOrderStatusMutation } from "@/redux/api/ordersEndpoints";
+import { useGetBranchesQuery } from "@/redux/api/branchesEndpoints";
+import type { Order, KitchenOrderStatus } from "@/types/api/index";
+import type { KitchenOrder } from "@/types/api";
 import { cn } from "@/lib/utils";
 
 type Filter = "ALL" | "NEW" | "PREPARING" | "READY";
 
+function toKitchenOrderDisplay(order: Order): KitchenOrder {
+  const status = (order.kitchenStatus as KitchenOrderStatus) || "NEW";
+  return {
+    id: order.id,
+    token: order.tokenNumber,
+    items: (order.items ?? []).map((i) => ({
+      name: i.name,
+      quantity: i.quantity,
+      note: i.note ?? undefined,
+      modifiers: i.modifiers?.map((m) => (typeof m === "string" ? m : m.name)) ?? [],
+    })),
+    orderType: order.orderType,
+    status,
+    createdAt: order.createdAt,
+  };
+}
+
 export default function KitchenPage() {
-  const { data: orders = [] } = useGetKitchenOrdersQuery();
-  const [updateOrderStatus] = useUpdateOrderStatusMutation();
+  const { data: branches = [] } = useGetBranchesQuery();
+  const branchId = branches[0]?.id ?? "";
+  const { data: orders = [] } = useGetKitchenOrdersQuery(branchId, { skip: !branchId });
+  const [updateOrderStatus] = useUpdateKitchenOrderStatusMutation();
   const [filter, setFilter] = useState<Filter>("ALL");
   const listRef = useRef<HTMLDivElement>(null);
 
+  const displayOrders = useMemo(() => orders.map(toKitchenOrderDisplay), [orders]);
   const filtered =
     filter === "ALL"
-      ? orders
-      : orders.filter((o) => o.status === filter);
+      ? displayOrders
+      : displayOrders.filter((o) => o.status === filter);
 
-  // Auto-scroll when new orders arrive (NEW at top)
   useEffect(() => {
     if (filter !== "ALL" && filter !== "NEW") return;
-    const hasNew = orders.some((o) => o.status === "NEW");
+    const hasNew = displayOrders.some((o) => o.status === "NEW");
     if (hasNew && listRef.current) {
       listRef.current.scrollTop = 0;
     }
-  }, [orders, filter]);
+  }, [displayOrders, filter]);
 
   const handleStatusChange = (orderId: string, status: KitchenOrderStatus) => {
     updateOrderStatus({ orderId, status });
   };
-
-  // New orders arrive from POS when an order is placed (addOrder dispatched from CheckoutDrawer).
 
   return (
     <div className="flex h-screen flex-col bg-[var(--background)]">

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { PageHeader } from "@/components/admin/PageHeader";
 import { StatsCard } from "@/components/admin/StatsCard";
@@ -12,14 +12,19 @@ import {
   useGetTopProductsQuery,
   useGetOrderTypeDistributionQuery,
 } from "@/redux/api/reports";
+import { useGetBranchesQuery } from "@/redux/api/branchesEndpoints";
 import { formatCurrency } from "@/lib/utils";
 import { Input } from "@/components/ui/input";
-import { cn } from "@/lib/utils";
 
 export default function ReportsPage() {
-  const [startDate, setStartDate] = useState("2025-02-20");
-  const [endDate, setEndDate] = useState("2025-02-25");
-  const [branchId, setBranchId] = useState("branch-1");
+  const [startDate, setStartDate] = useState(() => new Date().toISOString().slice(0, 10));
+  const [endDate, setEndDate] = useState(() => new Date().toISOString().slice(0, 10));
+  const { data: branches = [] } = useGetBranchesQuery();
+  const branchId = branches[0]?.id ?? "";
+  const [selectedBranchId, setSelectedBranchId] = useState("");
+  useEffect(() => {
+    if (branchId && !selectedBranchId) setSelectedBranchId(branchId);
+  }, [branchId, selectedBranchId]);
 
   const { data: summary, isLoading: summaryLoading } = useGetReportSummaryQuery();
   const { data: salesByDay = [], isLoading: salesLoading } = useGetSalesByDayQuery();
@@ -50,12 +55,14 @@ export default function ReportsPage() {
           <div>
             <label className="text-xs text-[var(--muted-foreground)] block mb-1">Branch</label>
             <select
-              value={branchId}
-              onChange={(e) => setBranchId(e.target.value)}
+              value={selectedBranchId || branchId}
+              onChange={(e) => setSelectedBranchId(e.target.value)}
               className="w-40 h-10 rounded-lg border border-[var(--border)] bg-transparent px-3 text-sm"
             >
-              <option value="branch-1">Branch 1</option>
-              <option value="branch-2">Branch 2</option>
+              {branches.map((b) => (
+                <option key={b.id} value={b.id}>{b.name}</option>
+              ))}
+              {branches.length === 0 && <option value="">No branches</option>}
             </select>
           </div>
         </div>

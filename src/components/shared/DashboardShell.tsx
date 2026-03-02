@@ -17,20 +17,22 @@ export function DashboardShell({ children }: { children: React.ReactNode }) {
   const router = useRouter();
   const pathname = usePathname();
   const user = useAppSelector((s) => s.auth?.user);
+  const rehydrated = useAppSelector((s) => s.auth?._rehydrated);
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
   useEffect(() => {
+    if (!rehydrated) return;
     if (user === null) {
       router.replace("/auth/login");
       return;
     }
-  }, [user, router]);
+  }, [user, rehydrated, router]);
 
   useEffect(() => {
     setSidebarOpen(false);
   }, [pathname]);
 
-  if (user === null) return null;
+  if (!rehydrated || user === null) return null;
 
   return (
     <div className="flex h-screen overflow-hidden">
