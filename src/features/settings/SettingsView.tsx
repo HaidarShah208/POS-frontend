@@ -10,16 +10,22 @@ import {
   setPos,
   saveSettings,
 } from "@/redux/slices/settingsSlice";
+import {
+  useGetCategoriesQuery,
+  useCreateCategoryMutation,
+  useDeleteCategoryMutation,
+} from "@/redux/api/productsEndpoints";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { formatCurrency } from "@/lib/utils";
 import { cn } from "@/lib/utils";
 import type { POSPreferences } from "@/types/settings";
 
-type TabId = "general" | "tax" | "receipt" | "payment" | "pos";
+type TabId = "general" | "categories" | "tax" | "receipt" | "payment" | "pos";
 
 const TABS: { id: TabId; label: string }[] = [
   { id: "general", label: "General" },
+  { id: "categories", label: "Categories" },
   { id: "tax", label: "Tax & Charges" },
   { id: "receipt", label: "Receipt Designer" },
   { id: "payment", label: "Payment Methods" },
@@ -86,6 +92,10 @@ export function SettingsView() {
           </motion.section>
         )}
 
+        {activeTab === "categories" && (
+          <CategoriesSection />
+        )}
+
         {activeTab === "tax" && (
           <TaxSection settings={settings.tax} onChange={(p) => { dispatch(setTax(p)); markDirty(); }} />
         )}
@@ -120,6 +130,102 @@ export function SettingsView() {
         </div>
       </div>
     </div>
+  );
+}
+
+function CategoriesSection() {
+  const { data: categories = [], isLoading } = useGetCategoriesQuery();
+  const [createCategory, { isLoading: creating }] = useCreateCategoryMutation();
+  const [deleteCategory] = useDeleteCategoryMutation();
+  const [name, setName] = useState("");
+  const [slug, setSlug] = useState("");
+  const [sortOrder, setSortOrder] = useState(0);
+
+  const handleAdd = async (e: React.FormEvent) => {
+    e.preventDefault();
+    const trimmedName = name.trim();
+    if (!trimmedName) return;
+    const slugValue = slug.trim() || trimmedName.toLowerCase().replace(/\s+/g, "-").replace(/[^a-z0-9-]/g, "");
+    try {
+      await createCategory({ name: trimmedName, slug: slugValue, sortOrder }).unwrap();
+      setName("");
+      setSlug("");
+      setSortOrder(categories.length);
+    } catch {
+      // error toast or inline message
+    }
+  };
+
+  return (
+    <motion.section
+      initial={{ opacity: 0, y: 8 }}
+      animate={{ opacity: 1, y: 0 }}
+      className="space-y-6"
+    >
+      <h2 className="text-lg font-semibold">Categories</h2>
+      <p className="text-sm text-[var(--muted-foreground)]">Add categories for your products. They will appear in the product form dropdown.</p>
+
+      <form onSubmit={handleAdd} className="flex flex-wrap items-end gap-4 p-4 rounded-lg border border-[var(--border)] bg-[var(--muted)]/20 max-w-2xl">
+        <div className="min-w-[180px]">
+          <label className="text-sm font-medium block mb-1">Name</label>
+          <Input
+            value={name}
+            onChange={(e) => setName(e.target.value)}
+            placeholder="e.g. Beverages"
+            className="bg-background"
+          />
+        </div>
+        <div className="min-w-[160px]">
+          <label className="text-sm font-medium block mb-1">Slug (optional)</label>
+          <Input
+            value={slug}
+            onChange={(e) => setSlug(e.target.value)}
+            placeholder="Auto from name"
+            className="bg-background"
+          />
+        </div>
+        <div className="w-24">
+          <label className="text-sm font-medium block mb-1">Order</label>
+          <Input
+            type="number"
+            min={0}
+            value={sortOrder}
+            onChange={(e) => setSortOrder(Number(e.target.value) || 0)}
+            className="bg-background"
+          />
+        </div>
+        <Button type="submit" disabled={!name.trim() || creating}>
+          {creating ? "Adding…" : "Add category"}
+        </Button>
+      </form>
+
+      {isLoading ? (
+        <div className="h-24 rounded-lg border border-[var(--border)] animate-pulse bg-[var(--muted)]/30 max-w-2xl" />
+      ) : categories.length === 0 ? (
+        <p className="text-sm text-[var(--muted-foreground)]">No categories yet. Add one above.</p>
+      ) : (
+        <ul className="space-y-2 max-w-2xl">
+          {categories.map((c) => (
+            <li
+              key={c.id}
+              className="flex items-center justify-between gap-4 py-2 px-3 rounded-lg border border-[var(--border)] bg-background"
+            >
+              <span className="font-medium">{c.name}</span>
+              <span className="text-sm text-[var(--muted-foreground)]">{c.slug}</span>
+              <Button
+                type="button"
+                variant="ghost"
+                size="sm"
+                className="text-[var(--destructive)] hover:text-[var(--destructive)]"
+                onClick={() => deleteCategory(c.id)}
+              >
+                Delete
+              </Button>
+            </li>
+          ))}
+        </ul>
+      )}
+    </motion.section>
   );
 }
 

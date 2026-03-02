@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { Toaster } from "sonner";
 import { StoreProvider } from "@/redux/provider";
 import { AuthRehydrate } from "@/components/auth/AuthRehydrate";
 import { Poppins } from "next/font/google";
@@ -26,6 +27,7 @@ export default function RootLayout({
           <AuthRehydrate />
           <TopLoader />
           {children}
+          <Toaster position="top-center" richColors closeButton />
         </StoreProvider>
       </body>
     </html>

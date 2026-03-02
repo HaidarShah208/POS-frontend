@@ -3,13 +3,11 @@
 import { useForm } from "react-hook-form";
 import { useRouter } from "next/navigation";
 import { useDispatch } from "react-redux";
+import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { setCredentials, saveAuthToStorage } from "@/redux/api/auth";
 import { useLoginMutation } from "@/redux/api/authEndpoints";
-import loginImg from '../../assets/login.jpeg'
-
 
 type LoginFormValues = { email: string; password: string };
 
@@ -28,35 +26,56 @@ export function LoginForm() {
       router.push("/dashboard");
     } catch {
       setError("root", { message: "Invalid email or password." });
+      toast.error("Invalid email or password.");
     }
   };
 
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle>Sign in</CardTitle>
-        <CardDescription>Enter your credentials to access the POS.</CardDescription>
-      </CardHeader>
-      <CardContent>
-        <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
-          {errors.root && (
-            <p className="text-sm text-[var(--destructive)]">{errors.root.message}</p>
+    <div className="space-y-8">
+      <div>
+        <h1 className="text-2xl font-bold tracking-tight text-foreground">Welcome Back!</h1>
+        <p className="mt-1 text-sm text-muted-foreground">Sign in with your Username and Password.</p>
+      </div>
+
+      <form onSubmit={handleSubmit(onSubmit)} className="space-y-5">
+        <div>
+          <label htmlFor="email" className="sr-only">Email</label>
+          <Input
+            id="email"
+            type="email"
+            placeholder="email"
+            autoComplete="email"
+            className="h-11 rounded-lg border border-input bg-background px-3 py-2 text-sm"
+            {...register("email", { required: "Email is required" })}
+          />
+          {errors.email && (
+            <p className="mt-1 text-xs text-destructive">{errors.email.message}</p>
           )}
-          <div>
-            <label htmlFor="email" className="mb-1 block text-sm font-medium">Email</label>
-            <Input id="email" type="email" placeholder="you@example.com" {...register("email", { required: "Email is required" })} />
-            {errors.email && <p className="mt-1 text-xs text-[var(--destructive)]">{errors.email.message}</p>}
-          </div>
-          <div>
-            <label htmlFor="password" className="mb-1 block text-sm font-medium">Password</label>
-            <Input id="password" type="password" placeholder="••••••••" {...register("password", { required: "Password is required" })} />
-            {errors.password && <p className="mt-1 text-xs text-[var(--destructive)]">{errors.password.message}</p>}
-          </div>
-          <Button type="submit" className="w-full" disabled={isLoading}>
-          {isLoading ? "Signing in..." : "Sign in"}
+        </div>
+        <div className="space-y-1">
+         
+          <Input
+            id="password"
+            type="password"
+            placeholder="Password"
+            autoComplete="current-password"
+            className="h-11 rounded-lg border border-input bg-background px-3 py-2 text-sm"
+            {...register("password", { required: "Password is required" })}
+          />
+          {errors.password && (
+            <p className="mt-1 text-xs text-destructive">{errors.password.message}</p>
+          )}
+        </div>
+        <Button
+          type="submit"
+          className="h-11 w-full rounded-lg bg-foreground text-background hover:bg-foreground/90"
+          disabled={isLoading}
+        >
+          {isLoading ? "Signing in…" : "Login"}
         </Button>
-        </form>
-      </CardContent>
-    </Card>
+      </form>
+
+      
+    </div>
   );
 }
