@@ -58,7 +58,7 @@ export function Topbar({ onMenuClick }: TopbarProps) {
           </svg>
         </Button>
       
-        <span className="text-sm font-medium text-[var(--muted-foreground)] sm:hidden">POS</span>
+        <span className="text-sm font-medium  lg:hidden">Cheezy Bites</span>
       </div>
 
       <div className="flex items-center  gap-1">
@@ -75,7 +75,7 @@ export function Topbar({ onMenuClick }: TopbarProps) {
             <div className="absolute right-0 top-full mt-1 w-48 rounded-lg border border-[var(--border)] bg-[var(--background)] shadow-lg py-2 z-50">
               <p className="px-4 py-2 text-sm text-[var(--muted-foreground)] truncate">{user?.email}</p>
               <p className="px-4 py-0 text-xs text-[var(--muted-foreground)] capitalize">{user?.role}</p>
-              <Link href="/pos" className="block px-4 py-2 text-sm hover:bg-[var(--muted)]">Open POS</Link>
+              <Link href="/pos" className="block px-4 py-2 text-sm hover:bg-[var(--muted)]">Sales Counter</Link>
               <button className="block w-full text-left px-4 py-2 text-sm hover:bg-[var(--muted)]" onClick={handleLogout}>
                 Logout
               </button>

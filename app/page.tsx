@@ -14,7 +14,7 @@ export default function HomePage() {
           <Link href="/dashboard">Dashboard</Link>
         </Button>
         <Button variant="accent" asChild>
-          <Link href="/pos">Open POS</Link>
+          <Link href="/pos">Sales Counter</Link>
         </Button>
       </div>
     </div>

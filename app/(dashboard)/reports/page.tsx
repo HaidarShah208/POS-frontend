@@ -129,28 +129,30 @@ export default function ReportsPage() {
         animate={{ opacity: 1, y: 0 }}
         className="space-y-6"
       >
-        <PageHeader title="Reports" description="Analytics and insights" />
+       <div className="flex md:flex-row flex-col justify-between">
+       <PageHeader title="Reports" description="Analytics and insights" />
 
-        <div className="flex flex-wrap gap-4 items-end">
-          <div>
-            <label className="text-xs text-[var(--muted-foreground)] block mb-1">From</label>
-            <Input
-              type="date"
-              value={startDate}
-              onChange={(e) => setStartDate(e.target.value)}
-              className="w-40"
-            />
-          </div>
-          <div>
-            <label className="text-xs text-[var(--muted-foreground)] block mb-1">To</label>
-            <Input
-              type="date"
-              value={endDate}
-              onChange={(e) => setEndDate(e.target.value)}
-              className="w-40"
-            />
-          </div>
-        </div>
+<div className="flex flex-wrap gap-4 items-end justify-end">
+  <div>
+    <label className="text-xs text-[var(--muted-foreground)] block mb-1">From</label>
+    <Input
+      type="date"
+      value={startDate}
+      onChange={(e) => setStartDate(e.target.value)}
+      className="w-40"
+    />
+  </div>
+  <div>
+    <label className="text-xs text-[var(--muted-foreground)] block mb-1">To</label>
+    <Input
+      type="date"
+      value={endDate}
+      onChange={(e) => setEndDate(e.target.value)}
+      className="w-40"
+    />
+  </div>
+</div>
+       </div>
 
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
           <StatsCard
@@ -167,7 +169,22 @@ export default function ReportsPage() {
             value={!isLoading ? formatCurrency(summary.totalProfit) : "—"}
           />
         </div>
-
+        <ChartCard title="Order type distribution" loading={isLoading}>
+          <div className="flex flex-wrap gap-4">
+            {orderTypeDist.map((d) => (
+              <div key={d.type} className="flex items-center gap-2">
+                <div
+                  className="w-4 h-4 rounded-full"
+                  style={{
+                    backgroundColor: `hsl(${(orderTypeDist.indexOf(d) * 120) % 360}, 60%, 50%)`,
+                  }}
+                />
+                <span className="text-sm">{d.type}</span>
+                <span className="text-sm text-[var(--muted-foreground)]">{d.percentage}%</span>
+              </div>
+            ))}
+          </div>
+        </ChartCard>
         <div className="grid gap-6 lg:grid-cols-2">
           <ChartCard title="Sales by day" loading={isLoading}>
             <div className="h-[200px] flex items-end gap-1">
@@ -211,22 +228,7 @@ export default function ReportsPage() {
           </ChartCard>
         </div>
 
-        <ChartCard title="Order type distribution" loading={isLoading}>
-          <div className="flex flex-wrap gap-4">
-            {orderTypeDist.map((d) => (
-              <div key={d.type} className="flex items-center gap-2">
-                <div
-                  className="w-4 h-4 rounded-full"
-                  style={{
-                    backgroundColor: `hsl(${(orderTypeDist.indexOf(d) * 120) % 360}, 60%, 50%)`,
-                  }}
-                />
-                <span className="text-sm">{d.type}</span>
-                <span className="text-sm text-[var(--muted-foreground)]">{d.percentage}%</span>
-              </div>
-            ))}
-          </div>
-        </ChartCard>
+       
       </motion.div>
     </RoleGuard>
   );

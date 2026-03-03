@@ -12,6 +12,7 @@ import { useAddToCartMutation, useGetCartQuery } from "@/redux/api/cart";
 import { useGetProductsQuery, useGetCategoriesQuery } from "@/redux/api";
 import { usePosKeyboardShortcuts } from "@/hooks/usePosKeyboardShortcuts";
 import type { Product } from "@/types/api/index";
+import { ArrowLeft, X } from "lucide-react";
 
 export default function POSPage() {
   useGetCartQuery(); // Prime cart cache so selectors have data
@@ -65,7 +66,7 @@ export default function POSPage() {
         <aside className="sticky top-0 flex h-full w-44 shrink-0 flex-col border-r border-[var(--border)] bg-[var(--background)] md:w-48">
           <div className="p-3 border-b border-[var(--border)]">
             <Button variant="ghost" size="sm" asChild>
-              <Link href="/dashboard">← Back</Link>
+              <Link href="/dashboard"><ArrowLeft className='w-5'/> Back</Link>
             </Button>
           </div>
           <CategoryList

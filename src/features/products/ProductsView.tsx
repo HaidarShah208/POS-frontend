@@ -19,6 +19,7 @@ import {
   useDeleteProductMutation,
 } from "@/redux/api/productsEndpoints";
 import type { AdminProduct } from "@/types/admin";
+import type { Product as ApiProduct } from "@/types/api/index";
 import { formatCurrency } from "@/lib/utils";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
@@ -35,7 +36,7 @@ type ProductFormValues = {
 
 export function ProductsView() {
   const { data: productsResponse, isLoading } = useGetProductsQuery();
-  const products = productsResponse?.data ?? [];
+  const apiProducts = (productsResponse?.data ?? []) as ApiProduct[];
   const { data: categories = [], isLoading: categoriesLoading } = useGetCategoriesQuery();
   const [createProduct] = useCreateProductMutation();
   const [updateProduct] = useUpdateProductMutation();
@@ -81,6 +82,26 @@ export function ProductsView() {
       setDrawerOpen(true);
     },
     [categories, form]
+  );
+
+  const products: AdminProduct[] = useMemo(
+    () =>
+      apiProducts.map((p) => ({
+        id: p.id,
+        name: p.name,
+        categoryId: p.categoryId,
+        price: p.price,
+        cost: p.cost ?? 0,
+        sku: p.sku ?? "",
+        barcode: p.barcode ?? "",
+        image: p.image ?? undefined,
+        description: p.description ?? undefined,
+        status: (p.status as AdminProduct["status"]) ?? "active",
+        modifiers: p.modifiers ?? [],
+        createdAt: p.createdAt,
+        updatedAt: p.updatedAt,
+      })),
+    [apiProducts]
   );
 
   const columns: DataTableColumn<AdminProduct>[] = useMemo(
@@ -207,7 +228,7 @@ export function ProductsView() {
             <div>
               <label className="text-sm font-medium">Name</label>
               <Input {...form.register("name", { required: true })} className="mt-1" />
-            </div>is 
+            </div>
             <div>
               <label className="text-sm font-medium">Category</label>
               <select

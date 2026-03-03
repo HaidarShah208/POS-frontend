@@ -125,32 +125,49 @@ export default function OrdersPage() {
         </p>
       ) : (
         <div className="space-y-4">
-          {filteredOrders.map((order) => (
-            <Card key={order.id}>
-              <CardHeader className="flex flex-row items-center justify-between gap-2 pb-2">
-                 
-                <Badge
-                  variant={
-                    order.status === "completed"
-                      ? "success"
-                      : order.status === "cancelled"
-                        ? "destructive"
-                        : "warning"
-                  }
-                >
-                  {order.status}
-                </Badge>
-              </CardHeader>
-              <CardContent>
-                <p className="text-sm text-[var(--muted-foreground)]">
-                  {(order.items?.length ?? 0)} item(s) · {formatCurrency(order.grandTotal)}
-                </p>
-                <p className="text-xs text-[var(--muted-foreground)]">
-                  {new Date(order.createdAt).toLocaleString()}
-                </p>
-              </CardContent>
-            </Card>
-          ))}
+          {filteredOrders.map((order) => {
+            const firstItemName = order.items?.[0]?.name;
+            const moreCount = Math.max(0, (order.items?.length ?? 0) - 1);
+            return (
+              <Card key={order.id}>
+                <CardHeader className="flex flex-row items-center justify-between gap-3 pb-2">
+                  <div className="flex items-center gap-3 min-w-0">
+                    
+                    <div className="min-w-0">
+                      <CardTitle className="text-base leading-tight truncate">
+                        {firstItemName ?? "—"}
+                        {moreCount > 0 && (
+                          <span className="ml-2 text-sm font-normal text-[var(--muted-foreground)]">
+                            +{moreCount} more
+                          </span>
+                        )}
+                      </CardTitle>
+                     
+                    </div>
+                  </div>
+                  <Badge
+                    variant={
+                      order.status === "completed"
+                        ? "success"
+                        : order.status === "cancelled"
+                          ? "destructive"
+                          : "warning"
+                    }
+                  >
+                    {order.status}
+                  </Badge>
+                </CardHeader>
+                <CardContent>
+                  <p className="text-sm text-[var(--muted-foreground)]">
+                    {(order.items?.length ?? 0)} item(s) · {formatCurrency(order.grandTotal)}
+                  </p>
+                  <p className="text-xs text-[var(--muted-foreground)]">
+                    {new Date(order.createdAt).toLocaleString()}
+                  </p>
+                </CardContent>
+              </Card>
+            );
+          })}
         </div>
       )}
     </motion.div>

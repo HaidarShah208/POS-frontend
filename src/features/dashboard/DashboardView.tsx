@@ -50,11 +50,11 @@ export function DashboardView() {
         </Card>
         <Card>
           <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-sm font-medium">Open POS</CardTitle>
+            <CardTitle className="text-sm font-medium">Sales Counter</CardTitle>
           </CardHeader>
           <CardContent>
             <Button asChild>
-              <Link href="/pos">Open POS</Link>
+              <Link href="/pos">Sales Counter</Link>
             </Button>
           </CardContent>
         </Card>

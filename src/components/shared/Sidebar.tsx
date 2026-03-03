@@ -12,10 +12,10 @@ export function Sidebar() {
   const navItems = user ? getNavItemsForRole(user.role) : [];
 
   return (
-    <aside className="flex h-full w-56 flex-col border-r border-[var(--border)] bg-[var(--muted)]/30">
-      <div className="p-4 border-b border-[var(--border)]">
+    <aside className="flex h-full  flex-col border-r border-[var(--border)] ">
+      <div className="px-4 pt-4 pb-[15px] border-b border-[var(--border)]">
         <Link href="/dashboard" className="text-lg font-bold text-[var(--foreground)]">
-          POS Restaurant
+          Cheezy Bites
         </Link>
       </div>
       <nav className="flex-1 space-y-1 p-2">

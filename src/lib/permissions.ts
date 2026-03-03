@@ -27,7 +27,7 @@ export type NavItem = { href: string; label: string; permission: Permission };
 
 const ALL_NAV: NavItem[] = [
   { href: "/dashboard", label: "Dashboard", permission: "dashboard" },
-  { href: "/pos", label: "POS", permission: "pos" },
+  { href: "/pos", label: "Sales Counter", permission: "pos" },
   { href: "/kitchen", label: "Kitchen", permission: "kitchen" },
   { href: "/products", label: "Products", permission: "products" },
   { href: "/inventory", label: "Inventory", permission: "inventory" },
