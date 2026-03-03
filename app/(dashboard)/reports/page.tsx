@@ -25,13 +25,18 @@ function addDay(dateStr: string): string {
   return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
 }
 
+function safeNum(value: unknown): number {
+  const n = Number(value);
+  return Number.isFinite(n) ? n : 0;
+}
+
 function computeReportFromOrders(orders: Order[]): {
   summary: ReportSummary;
   salesByDay: SalesByDay[];
   topProducts: TopProduct[];
   orderTypeDist: OrderTypeDistribution[];
 } {
-  const totalSales = orders.reduce((s, o) => s + o.grandTotal, 0);
+  const totalSales = orders.reduce((s, o) => s + safeNum(o.grandTotal), 0);
   const totalOrders = orders.length;
   const summary: ReportSummary = {
     totalSales,
@@ -42,9 +47,10 @@ function computeReportFromOrders(orders: Order[]): {
 
   const byDay = new Map<string, { sales: number; orders: number }>();
   for (const o of orders) {
-    const date = o.createdAt.slice(0, 10);
+    const date = (o.createdAt ?? "").slice(0, 10);
+    if (!date) continue;
     const cur = byDay.get(date) ?? { sales: 0, orders: 0 };
-    cur.sales += o.grandTotal;
+    cur.sales += safeNum(o.grandTotal);
     cur.orders += 1;
     byDay.set(date, cur);
   }
@@ -55,10 +61,12 @@ function computeReportFromOrders(orders: Order[]): {
   const productMap = new Map<string, { name: string; quantity: number; revenue: number }>();
   for (const o of orders) {
     for (const item of o.items ?? []) {
-      const id = item.productId ?? item.name ?? item.id;
-      const cur = productMap.get(id) ?? { name: item.name, quantity: 0, revenue: 0 };
-      cur.quantity += item.quantity;
-      cur.revenue += item.price * item.quantity;
+      const id = item.productId ?? item.name ?? item.id ?? "";
+      const cur = productMap.get(id) ?? { name: item.name ?? "Unknown", quantity: 0, revenue: 0 };
+      const qty = safeNum(item.quantity);
+      const price = safeNum(item.price);
+      cur.quantity += qty;
+      cur.revenue += price * qty;
       productMap.set(id, cur);
     }
   }

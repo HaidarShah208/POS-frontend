@@ -237,10 +237,7 @@ export function ProductsView() {
               <label className="text-sm font-medium">SKU</label>
               <Input {...form.register("sku")} className="mt-1" />
             </div>
-            <div>
-              <label className="text-sm font-medium">Barcode</label>
-              <Input {...form.register("barcode")} className="mt-1" />
-            </div>
+           
             <div>
               <label className="text-sm font-medium">Status</label>
               <select

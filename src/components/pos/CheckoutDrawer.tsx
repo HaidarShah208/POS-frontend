@@ -46,9 +46,17 @@ const STEP_ORDER: CheckoutStep[] = [
   "Success",
 ];
 
+type PlacedOrderSummary = {
+  subtotal: number;
+  tax: number;
+  discountAmount: number;
+  grandTotal: number;
+};
+
 export function CheckoutDrawer({ open, onOpenChange, onSuccessClose }: CheckoutDrawerProps) {
   const [step, setStep] = useState(0);
   const [placedToken, setPlacedToken] = useState<string | null>(null);
+  const [placedSummary, setPlacedSummary] = useState<PlacedOrderSummary | null>(null);
   const [setOrderType] = useSetOrderTypeMutation();
   const [setPaymentMethod] = useSetPaymentMethodMutation();
   const [clearCart] = useClearCartMutation();
@@ -86,6 +94,7 @@ export function CheckoutDrawer({ open, onOpenChange, onSuccessClose }: CheckoutD
         orderType,
         paymentMethod,
       }).unwrap();
+      setPlacedSummary({ subtotal, tax, discountAmount, grandTotal });
       setPlacedToken(result.tokenNumber);
       clearCart();
       setStep(5);
@@ -101,6 +110,7 @@ export function CheckoutDrawer({ open, onOpenChange, onSuccessClose }: CheckoutD
 
   const handleNewOrder = () => {
     setPlacedToken(null);
+    setPlacedSummary(null);
     setStep(0);
     onOpenChange(false);
     onSuccessClose?.();
@@ -228,8 +238,14 @@ export function CheckoutDrawer({ open, onOpenChange, onSuccessClose }: CheckoutD
                 className="flex flex-col items-center py-6"
               >
                 <p className="text-sm text-[var(--muted-foreground)] mb-2">Order placed</p>
-                <TokenDisplay token={placedToken} size="lg" className="my-4" />
-                <CartSummary subtotal={subtotal} tax={tax} discountAmount={discountAmount} grandTotal={grandTotal} className="w-full mt-4" />
+                <TokenDisplay token={placedToken} size="md" className="my-4" />
+                <CartSummary
+                  subtotal={placedSummary?.subtotal ?? subtotal}
+                  tax={placedSummary?.tax ?? tax}
+                  discountAmount={placedSummary?.discountAmount ?? discountAmount}
+                  grandTotal={placedSummary?.grandTotal ?? grandTotal}
+                  className="w-full mt-4"
+                />
                 <div className="flex gap-2 mt-6 w-full">
                   <Button variant="outline" className="flex-1" onClick={() => window.print()}>
                     Print

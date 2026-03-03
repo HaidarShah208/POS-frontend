@@ -94,11 +94,19 @@ export default function OrdersPage() {
             {totalCount} order{totalCount !== 1 ? "s" : ""}
           </p>
         </div>
-        <div className="flex flex-wrap items-center gap-2">
-          <select
+        <div className="flex flex-1 flex-wrap items-center gap-3">
+        
+          <Input
+            placeholder="Search by order name"
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            className="h-10 min-w-[200px] flex-1 sm:flex-none sm:max-w-full"
+          />
+        </div>
+        <select
             value={datePreset}
             onChange={(e) => setDatePreset(e.target.value as (typeof DATE_PRESETS)[number]["value"])}
-            className="w-[180px] h-9 rounded-md border border-[var(--border)] bg-transparent px-3 py-1 text-sm"
+            className="h-10 min-w-[180px] flex-1 sm:flex-none rounded-md border border-[var(--border)] bg-transparent px-3 py-2 text-sm"
           >
             {DATE_PRESETS.map((p) => (
               <option key={p.value} value={p.value}>
@@ -106,13 +114,6 @@ export default function OrdersPage() {
               </option>
             ))}
           </select>
-          <Input
-            placeholder="Search by order # or token..."
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            className="max-w-[220px]"
-          />
-        </div>
       </div>
 
       {isLoading ? (
@@ -127,12 +128,7 @@ export default function OrdersPage() {
             <Card key={order.id}>
               <CardHeader className="flex flex-row items-center justify-between pb-2">
                 <CardTitle className="text-base">
-                  {order.orderNumber ?? `Order ${order.id.slice(0, 8)}`}
-                  {order.tokenNumber != null && (
-                    <span className="ml-2 text-sm font-normal text-[var(--muted-foreground)]">
-                      Token #{order.tokenNumber}
-                    </span>
-                  )}
+                  {order.orderNumber ?? `Order #${(order.id ?? "").slice(0, 8)}`}
                 </CardTitle>
                 <Badge
                   variant={
