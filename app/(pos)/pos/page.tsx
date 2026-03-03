@@ -11,7 +11,7 @@ import { Button } from "@/components/ui/button";
 import { useAddToCartMutation, useGetCartQuery } from "@/redux/api/cart";
 import { useGetProductsQuery, useGetCategoriesQuery } from "@/redux/api";
 import { usePosKeyboardShortcuts } from "@/hooks/usePosKeyboardShortcuts";
-import type { Product } from "@/types";
+import type { Product } from "@/types/api/index";
 
 export default function POSPage() {
   useGetCartQuery(); // Prime cart cache so selectors have data
@@ -52,7 +52,7 @@ export default function POSPage() {
         productId: product.id,
         name: product.name,
         price: product.price,
-        image: product.image,
+        image: product.image ?? undefined,
       });
     },
     [addToCart]

@@ -128,7 +128,7 @@ export default function OrdersPage() {
             <Card key={order.id}>
               <CardHeader className="flex flex-row items-center justify-between pb-2">
                 <CardTitle className="text-base">
-                  {order.orderNumber ?? `Order #${(order.id ?? "").slice(0, 8)}`}
+                  Order {order.orderNumber ?? (order.id ?? "").slice(0, 8)}
                 </CardTitle>
                 <Badge
                   variant={

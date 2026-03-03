@@ -50,8 +50,8 @@ export interface Product {
   name: string;
   price: number;
   categoryId: string;
-  image?: string;
-  description?: string;
+  image?: string | null;
+  description?: string | null;
 }
 
 export interface Category {

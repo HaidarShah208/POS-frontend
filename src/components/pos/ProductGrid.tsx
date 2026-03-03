@@ -2,7 +2,7 @@
 
 import { useRef, useEffect } from "react";
 import { ProductCard } from "./ProductCard";
-import type { Product, Category } from "@/types";
+import type { Product, Category } from "@/types/api/index";
 
 interface ProductGridProps {
   products: Product[];

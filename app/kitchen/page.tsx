@@ -76,7 +76,7 @@ export default function KitchenPage() {
   return (
     <div className="flex h-screen flex-col bg-[var(--background)]">
       <header className="shrink-0 border-b border-[var(--border)] bg-[var(--card)] shadow-sm">
-        <div className="mx-auto flex max-w-[1600px] items-center justify-between gap-4 px-4 py-4 sm:px-6">
+        <div className="mx-auto flex md:flex-row flex-col items-center justify-between gap-4 px-4 py-4 sm:px-6">
           <div className="flex items-center ">
             <Button variant="ghost" size="sm" asChild className="text-[var(--muted-foreground)] hover:text-[var(--foreground)]">
               <Link href="/dashboard"><ArrowLeft className='w-8 h-6'/> </Link>
@@ -102,7 +102,7 @@ export default function KitchenPage() {
                 type="button"
                 onClick={() => setFilter(f)}
                 className={cn(
-                  "relative rounded-md px-4 py-2.5 text-sm font-medium transition-colors pos-touch min-h-[40px]",
+                  "relative rounded-md px-4 py-2.5 text-sm font-medium transition-colors pos-touch h-[20px] md:min-h-[40px]",
                   filter === f
                     ? "bg-[var(--background)] text-[var(--foreground)] shadow-sm"
                     : "text-[var(--muted-foreground)] hover:text-[var(--foreground)]"

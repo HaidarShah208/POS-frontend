@@ -30,6 +30,7 @@ import { usePlaceOrderMutation } from "@/redux/api/ordersEndpoints";
 import { formatCurrency } from "@/lib/utils";
 import { Skeleton } from "@/components/ui/skeleton";
 import { toast } from "sonner";
+import { Cross, CrossIcon, X } from "lucide-react";
 
 interface CheckoutDrawerProps {
   open: boolean;
@@ -141,14 +142,14 @@ export function CheckoutDrawer({ open, onOpenChange, onSuccessClose }: CheckoutD
 
   return (
     <Drawer open={open} onOpenChange={handleOpenChange}>
-      <DrawerContent side="right" className="max-w-md">
+      <DrawerContent side="right" className="max-w-md flex flex-col">
         <DrawerHeader className="flex flex-row items-center justify-between">
           <DrawerTitle>Checkout</DrawerTitle>
           <DrawerClose asChild>
-            <Button variant="ghost" size="icon">×</Button>
+            <Button variant="ghost" size="icon"><X className="w-6"/></Button>
           </DrawerClose>
         </DrawerHeader>
-        <div className="flex-1 overflow-y-auto p-4">
+        <div className="flex-1 overflow-y-auto p-4 min-h-0">
           <CheckoutStepper currentStep={step} steps={STEP_ORDER} className="mb-4" />
 
           <AnimatePresence mode="wait">
@@ -235,8 +236,23 @@ export function CheckoutDrawer({ open, onOpenChange, onSuccessClose }: CheckoutD
                 initial={{ opacity: 0, scale: 0.95 }}
                 animate={{ opacity: 1, scale: 1 }}
                 exit={{ opacity: 0 }}
-                className="flex flex-col items-center py-6"
+                className="flex flex-col items-center pb-24"
               >
+                <motion.div
+                  initial={{ scale: 0 }}
+                  animate={{ scale: 1 }}
+                  transition={{ type: "spring", stiffness: 260, damping: 20 }}
+                  className="mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-emerald-500 text-white shadow-lg"
+                >
+                  <svg className="h-9 w-9" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5} strokeLinecap="round" strokeLinejoin="round">
+                    <motion.path
+                      initial={{ pathLength: 0 }}
+                      animate={{ pathLength: 1 }}
+                      transition={{ delay: 0.2, duration: 0.4 }}
+                      d="M5 13l4 4L19 7"
+                    />
+                  </svg>
+                </motion.div>
                 <p className="text-sm text-[var(--muted-foreground)] mb-2">Order placed</p>
                 <TokenDisplay token={placedToken} size="md" className="my-4" />
                 <CartSummary
@@ -246,18 +262,23 @@ export function CheckoutDrawer({ open, onOpenChange, onSuccessClose }: CheckoutD
                   grandTotal={placedSummary?.grandTotal ?? grandTotal}
                   className="w-full mt-4"
                 />
-                <div className="flex gap-2 mt-6 w-full">
-                  <Button variant="outline" className="flex-1" onClick={() => window.print()}>
-                    Print
-                  </Button>
-                  <Button className="flex-1" onClick={handleNewOrder}>
-                    New order
-                  </Button>
-                </div>
               </motion.div>
             )}
           </AnimatePresence>
         </div>
+
+        {step === 5 && placedToken && (
+          <div className="shrink-0 border-t border-[var(--border)] bg-[var(--card)] p-4">
+            <div className="flex gap-2">
+              <Button variant="outline" className="flex-1" onClick={() => window.print()}>
+                Print
+              </Button>
+              <Button className="flex-1" onClick={handleNewOrder}>
+                New order
+              </Button>
+            </div>
+          </div>
+        )}
 
         {step < 4 && step !== 3 && (
           <div className="flex gap-2 p-4 border-t border-[var(--border)]">
