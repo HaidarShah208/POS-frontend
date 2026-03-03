@@ -1,13 +1,18 @@
 import { createApi, fetchBaseQuery } from "@reduxjs/toolkit/query/react";
 import { logout } from "./auth";
 
-const baseUrl =
-  typeof window !== "undefined"
-    ? process.env.NEXT_PUBLIC_API_URL || ""
-    : process.env.NEXT_PUBLIC_API_URL || "";
+const BACKEND_ORIGIN =
+  process.env.NEXT_PUBLIC_API_URL ||
+  process.env.NEXT_PUBLIC_BACKEND_URL ||
+  process.env.API_URL ||
+  "";
+
+function normalizeOrigin(origin: string): string {
+  return origin.trim().replace(/\/$/, "");
+}
 
 const rawBaseQuery = fetchBaseQuery({
-    baseUrl: baseUrl ? `${baseUrl.replace(/\/$/, "")}/api` : "/api",
+    baseUrl: BACKEND_ORIGIN ? `${normalizeOrigin(BACKEND_ORIGIN)}/api` : "/api",
     prepareHeaders: (headers, { getState }) => {
       const state = getState() as { auth?: { token?: string | null } };
       const token = state.auth?.token ?? null;
@@ -23,6 +28,12 @@ async function baseQueryWithAuth(
   api: Parameters<typeof rawBaseQuery>[1],
   extra: Parameters<typeof rawBaseQuery>[2]
 ) {
+  if (!BACKEND_ORIGIN && typeof window !== "undefined") {
+    // When BACKEND_ORIGIN isn't available at build-time, requests fall back to `/api/*`.
+    // Ensure the Next.js API proxy route exists in production deployments.
+    // eslint-disable-next-line no-console
+    console.warn("[api] NEXT_PUBLIC_API_URL is missing; using /api proxy on same origin.");
+  }
   const result = await rawBaseQuery(args, api, extra);
   if (result.error?.status === 401) {
     api.dispatch(logout());
