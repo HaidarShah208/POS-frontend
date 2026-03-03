@@ -129,7 +129,7 @@ export default function KitchenPage() {
         ref={listRef}
         className={cn(
           "flex-1 overflow-y-auto p-4 sm:p-6",
-          "grid gap-4 sm:gap-5",
+          "grid gap-4 sm:gap-5 items-start",
           "grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5"
         )}
       >

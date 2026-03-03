@@ -14,8 +14,12 @@ export function DashboardView() {
 
   const { todaySales, todayCount } = useMemo(() => {
     const today = new Date().toISOString().slice(0, 10);
-    const todayOrders = orders.filter((o) => o.createdAt?.startsWith(today));
-    const sales = todayOrders.reduce((s, o) => s + o.grandTotal, 0);
+    const todayOrders = orders.filter((o) => (o.createdAt ?? "").startsWith(today));
+    let sales = 0;
+    for (const o of todayOrders) {
+      const n = Number(o.grandTotal);
+      sales += Number.isFinite(n) ? n : 0;
+    }
     return { todaySales: sales, todayCount: todayOrders.length };
   }, [orders]);
 
@@ -31,7 +35,7 @@ export function DashboardView() {
             <CardTitle className="text-sm font-medium">Sales today</CardTitle>
           </CardHeader>
           <CardContent>
-            <p className="text-2xl font-bold">{formatCurrency(todaySales)}</p>
+            <p className="text-2xl font-bold">{formatCurrency(Number.isFinite(todaySales) ? todaySales : 0)}</p>
             <p className="text-xs text-[var(--muted-foreground)]">From orders today</p>
           </CardContent>
         </Card>

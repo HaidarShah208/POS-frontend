@@ -5,6 +5,7 @@ import { motion } from "framer-motion";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
+import { TokenDisplay } from "@/components/pos/TokenDisplay";
 import { useGetOrdersQuery } from "@/redux/api/ordersEndpoints";
 import { formatCurrency } from "@/lib/utils";
 import type { Order } from "@/types/api/index";
@@ -126,10 +127,8 @@ export default function OrdersPage() {
         <div className="space-y-4">
           {filteredOrders.map((order) => (
             <Card key={order.id}>
-              <CardHeader className="flex flex-row items-center justify-between pb-2">
-                <CardTitle className="text-base">
-                  Order {order.orderNumber ?? (order.id ?? "").slice(0, 8)}
-                </CardTitle>
+              <CardHeader className="flex flex-row items-center justify-between gap-2 pb-2">
+                 
                 <Badge
                   variant={
                     order.status === "completed"

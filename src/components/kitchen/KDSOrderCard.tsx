@@ -62,7 +62,7 @@ export function KDSOrderCard(props: KDSOrderCardProps) {
       exit={{ opacity: 0, scale: 0.98 }}
       transition={{ duration: 0.2 }}
       className={cn(
-        "flex min-h-[200px] flex-col overflow-hidden rounded-2xl border-2 bg-[var(--card)] shadow-md transition-shadow hover:shadow-lg",
+        "flex min-h-[250px] flex-col overflow-hidden rounded-2xl border-2 bg-[var(--card)] shadow-md transition-shadow hover:shadow-lg sm:min-h-[320px]",
         config.border
       )}
     >
@@ -88,7 +88,7 @@ export function KDSOrderCard(props: KDSOrderCardProps) {
         </span>
       </div>
 
-      <ul className="flex-1 space-y-2 px-4 py-3 text-sm">
+      <ul className="min-h-0 flex-1 space-y-2 overflow-y-auto px-4 py-3 text-sm sm:max-h-[35vh]">
         {order.items.map((item, i) => (
           <li key={i} className="flex flex-wrap gap-x-1 gap-y-0.5">
             <span className="font-semibold text-[var(--foreground)]">{item.name}</span>
@@ -110,7 +110,7 @@ export function KDSOrderCard(props: KDSOrderCardProps) {
       </ul>
 
       {next && (
-        <div className="border-t border-[var(--border)] p-3">
+        <div className="shrink-0 border-t border-[var(--border)] p-3">
           <Button
             size="sm"
             className="h-11 w-full font-semibold"

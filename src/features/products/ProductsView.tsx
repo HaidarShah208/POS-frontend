@@ -207,7 +207,7 @@ export function ProductsView() {
             <div>
               <label className="text-sm font-medium">Name</label>
               <Input {...form.register("name", { required: true })} className="mt-1" />
-            </div>
+            </div>is 
             <div>
               <label className="text-sm font-medium">Category</label>
               <select

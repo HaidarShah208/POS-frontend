@@ -2,7 +2,7 @@
 
 import Image from "next/image";
 import { LoginForm } from "@/features/auth/LoginForm";
-import loginImg from "@/assets/login.jpeg";
+import loginImg from "@/assets/login.jpg";
 
 export default function LoginPage() {
   return (
