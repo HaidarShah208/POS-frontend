@@ -20,7 +20,7 @@ const rawBaseQuery = fetchBaseQuery({
 
 async function baseQueryWithAuth(
   args: Parameters<typeof rawBaseQuery>[0],
-  api: Parameters<Parameters<ReturnType<typeof fetchBaseQuery>>[0]["baseQuery"]>[1],
+  api: Parameters<typeof rawBaseQuery>[1],
   extra: Parameters<typeof rawBaseQuery>[2]
 ) {
   const result = await rawBaseQuery(args, api, extra);
