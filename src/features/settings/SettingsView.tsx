@@ -8,6 +8,7 @@ import {
   setReceipt,
   setPaymentMethod,
   setPos,
+  setGeneral,
   saveSettings,
 } from "@/redux/slices/settingsSlice";
 import {
@@ -19,7 +20,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { formatCurrency } from "@/lib/utils";
 import { cn } from "@/lib/utils";
-import type { POSPreferences } from "@/types/settings";
+import type { GeneralSettings, POSPreferences } from "@/types/settings";
 
 type TabId = "general" | "categories" | "tax" | "receipt" | "payment" | "pos";
 
@@ -81,14 +82,10 @@ export function SettingsView() {
       <div className="flex-1 min-w-0 flex flex-col">
         <div className="flex-1 space-y-6 pb-24">
         {activeTab === "general" && (
-          <motion.section
-            initial={{ opacity: 0, y: 8 }}
-            animate={{ opacity: 1, y: 0 }}
-            className="space-y-4"
-          >
-            <h2 className="text-lg font-semibold">General</h2>
-            <p className="text-sm text-[var(--muted-foreground)]">Business name, currency, and other general options can go here.</p>
-          </motion.section>
+          <GeneralSection
+            settings={settings.general}
+            onChange={(p) => { dispatch(setGeneral(p)); markDirty(); }}
+          />
         )}
 
         {activeTab === "categories" && (
@@ -127,6 +124,46 @@ export function SettingsView() {
         </div>
       </div>
     </div>
+  );
+}
+
+function GeneralSection({
+  settings,
+  onChange,
+}: {
+  settings: GeneralSettings;
+  onChange: (p: Partial<GeneralSettings>) => void;
+}) {
+  return (
+    <motion.section
+      initial={{ opacity: 0, y: 8 }}
+      animate={{ opacity: 1, y: 0 }}
+      className="space-y-4"
+    >
+      <h2 className="text-lg font-semibold">General</h2>
+      <p className="text-sm text-[var(--muted-foreground)]">Business name and currency. Changes apply after you click Save changes.</p>
+      <div className="space-y-4 max-w-md">
+        <div>
+          <label className="text-sm font-medium block mb-1">Business name</label>
+          <Input
+            value={settings.businessName}
+            onChange={(e) => onChange({ businessName: e.target.value })}
+            placeholder="e.g. My Restaurant"
+            className="bg-background"
+          />
+        </div>
+        <div>
+          <label className="text-sm font-medium block mb-1">Currency symbol</label>
+          <Input
+            value={settings.currencySymbol}
+            onChange={(e) => onChange({ currencySymbol: e.target.value })}
+            placeholder="e.g. Rs. or $"
+            className="bg-background"
+          />
+          <p className="text-xs text-[var(--muted-foreground)] mt-1">Used across POS, receipts, and reports (e.g. Rs., $, €).</p>
+        </div>
+      </div>
+    </motion.section>
   );
 }
 

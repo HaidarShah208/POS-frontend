@@ -16,10 +16,11 @@ import { ArrowLeft, X } from "lucide-react";
 
 export default function POSPage() {
   useGetCartQuery(); // Prime cart cache so selectors have data
-  const { data: productsResponse } = useGetProductsQuery({ limit: 200 });
-  const { data: categories = [] } = useGetCategoriesQuery();
+  const { data: productsResponse, isLoading: productsLoading, isUninitialized: productsUninitialized } = useGetProductsQuery({ limit: 200 });
+  const { data: categories = [], isLoading: categoriesLoading, isUninitialized: categoriesUninitialized } = useGetCategoriesQuery();
   const products = productsResponse?.data ?? [];
   const defaultCategoryId = categories[0]?.id ?? null;
+  const isLoading = productsLoading || categoriesLoading || productsUninitialized || categoriesUninitialized;
   const [addToCart] = useAddToCartMutation();
   const [activeCategoryId, setActiveCategoryId] = useState<string | null>(null);
   const [categoryIdToScroll, setCategoryIdToScroll] = useState<string | null>(null);
@@ -73,6 +74,7 @@ export default function POSPage() {
             categories={categories}
             activeId={effectiveCategoryId}
             onSelect={handleCategorySelect}
+            loading={isLoading}
           />
         </aside>
         <section className="flex min-w-0 flex-1 flex-col overflow-hidden">
@@ -82,6 +84,7 @@ export default function POSPage() {
             activeCategoryId={effectiveCategoryId}
             categoryIdToScroll={categoryIdToScroll}
             onAddToCart={handleAddToCart}
+            loading={isLoading}
           />
         </section>
         {/* Order summary: visible from md (was lg-only); narrower on md, full width on lg */}
@@ -110,6 +113,7 @@ export default function POSPage() {
               categories={categories}
               activeId={effectiveCategoryId}
               onSelect={handleCategorySelect}
+              loading={isLoading}
             />
           </aside>
           <section className="flex min-w-0 flex-1 flex-col overflow-hidden">
@@ -119,6 +123,7 @@ export default function POSPage() {
               activeCategoryId={effectiveCategoryId}
               categoryIdToScroll={categoryIdToScroll}
               onAddToCart={handleAddToCart}
+              loading={isLoading}
             />
           </section>
         </div>

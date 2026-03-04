@@ -7,7 +7,9 @@ const selectCartResult = (state: RootState) =>
 const selectCartData = (state: RootState) => selectCartResult(state)?.data;
 
 const selectCartState = (state: RootState) => selectCartData(state);
-const selectCartItems = (state: RootState) => selectCartData(state)?.items ?? [];
+
+const EMPTY_ITEMS: { id: string; productId: string; name: string; price: number; quantity: number; image?: string; note?: string; modifiers?: { id: string; name: string; price: number }[] }[] = [];
+const selectCartItems = (state: RootState) => selectCartData(state)?.items ?? EMPTY_ITEMS;
 const selectCartDiscount = (state: RootState) => selectCartData(state)?.discount ?? 0;
 const selectCartDiscountType = (state: RootState) =>
   selectCartData(state)?.discountType ?? "fixed";

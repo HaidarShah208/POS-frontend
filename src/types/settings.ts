@@ -29,7 +29,13 @@ export interface POSPreferences {
   kitchenAutoAccept: boolean;
 }
 
+export interface GeneralSettings {
+  businessName: string;
+  currencySymbol: string;
+}
+
 export interface SettingsState {
+  general: GeneralSettings;
   tax: TaxSettings;
   receipt: ReceiptDesignSettings;
   paymentMethods: PaymentMethodSetting[];

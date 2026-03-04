@@ -14,6 +14,10 @@ function loadStored(): Partial<SettingsState> | null {
 }
 
 const defaults: SettingsState = {
+  general: {
+    businessName: "Restaurant POS",
+    currencySymbol: "Rs.",
+  },
   tax: {
     taxName: "VAT",
     taxPercentage: 8,
@@ -44,6 +48,7 @@ const defaults: SettingsState = {
 
 const stored = loadStored();
 const initialState: SettingsState = {
+  general: { ...defaults.general, ...stored?.general },
   tax: { ...defaults.tax, ...stored?.tax },
   receipt: { ...defaults.receipt, ...stored?.receipt },
   paymentMethods: stored?.paymentMethods?.length ? stored.paymentMethods : defaults.paymentMethods,
@@ -70,6 +75,9 @@ const settingsSlice = createSlice({
     setPos: (state, action: { payload: Partial<SettingsState["pos"]> }) => {
       state.pos = { ...state.pos, ...action.payload };
     },
+    setGeneral: (state, action: { payload: Partial<SettingsState["general"]> }) => {
+      state.general = { ...state.general, ...action.payload };
+    },
     saveSettings: (state) => {
       if (typeof window !== "undefined") {
         localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
@@ -78,5 +86,5 @@ const settingsSlice = createSlice({
   },
 });
 
-export const { setTax, setReceipt, setPaymentMethod, addPaymentMethod, setPos, saveSettings } = settingsSlice.actions;
+export const { setTax, setReceipt, setPaymentMethod, addPaymentMethod, setPos, setGeneral, saveSettings } = settingsSlice.actions;
 export const settingsReducer = settingsSlice.reducer;
