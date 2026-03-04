@@ -273,6 +273,19 @@ function ReceiptSection({
   onChange: (p: Partial<typeof settings>) => void;
 }) {
   const is80 = settings.paperSize === "80mm";
+  const fileInputId = "receipt-logo-input";
+
+  const handleLogoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = () => {
+      const value = typeof reader.result === "string" ? reader.result : "";
+      if (value) onChange({ logoUrl: value });
+    };
+    reader.readAsDataURL(file);
+  };
+
   return (
     <motion.section
       initial={{ opacity: 0, y: 8 }}
@@ -282,12 +295,23 @@ function ReceiptSection({
       <div className="space-y-4 flex-1 max-w-md">
         <h2 className="text-lg font-semibold">Receipt Designer</h2>
         <div>
-          <label className="text-sm text-[var(--muted-foreground)]">Logo URL</label>
-          <Input
-            value={settings.logoUrl}
-            onChange={(e) => onChange({ logoUrl: e.target.value })}
-            placeholder="https://..."
-            className="mt-1"
+          <label className="text-sm text-[var(--muted-foreground)] block mb-1">Logo</label>
+          <label
+            htmlFor={fileInputId}
+            className="mt-1 flex h-20 cursor-pointer items-center justify-center rounded-lg border border-[var(--border)] bg-[var(--background)] text-xs text-[var(--muted-foreground)] overflow-hidden"
+          >
+            {settings.logoUrl ? (
+              <img src={settings.logoUrl} alt="Logo preview" className="h-full w-full object-contain" />
+            ) : (
+              <span>Click to upload logo</span>
+            )}
+          </label>
+          <input
+            id={fileInputId}
+            type="file"
+            accept="image/*"
+            className="hidden"
+            onChange={handleLogoChange}
           />
         </div>
         <div>
@@ -306,15 +330,7 @@ function ReceiptSection({
             className="mt-1"
           />
         </div>
-        <label className="flex items-center gap-2">
-          <input
-            type="checkbox"
-            checked={settings.showQrCode}
-            onChange={(e) => onChange({ showQrCode: e.target.checked })}
-            className="rounded border-[var(--border)]"
-          />
-          <span className="text-sm">Show QR code</span>
-        </label>
+        
         <div>
           <label className="text-sm text-[var(--muted-foreground)]">Paper size</label>
           <div className="flex gap-2 mt-1">

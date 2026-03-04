@@ -2,6 +2,7 @@ import { createSlice } from "@reduxjs/toolkit";
 import type { SettingsState } from "@/types/settings";
 
 const STORAGE_KEY = "pos-settings";
+const MAX_LOGO_LENGTH = 100_000;
 
 function loadStored(): Partial<SettingsState> | null {
   if (typeof window === "undefined") return null;
@@ -79,8 +80,18 @@ const settingsSlice = createSlice({
       state.general = { ...state.general, ...action.payload };
     },
     saveSettings: (state) => {
-      if (typeof window !== "undefined") {
-        localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+      if (typeof window === "undefined") return;
+      try {
+        // Clone and trim large fields (e.g. base64 logo) before persisting.
+        const toPersist: SettingsState = JSON.parse(JSON.stringify(state)) as SettingsState;
+        if (toPersist.receipt.logoUrl && toPersist.receipt.logoUrl.length > MAX_LOGO_LENGTH) {
+          toPersist.receipt.logoUrl = toPersist.receipt.logoUrl.slice(0, MAX_LOGO_LENGTH);
+        }
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(toPersist));
+      } catch (e) {
+        // Swallow quota/serialization errors so the app doesn't crash.
+        // eslint-disable-next-line no-console
+        console.warn("[settings] Failed to save settings to localStorage:", e);
       }
     },
   },

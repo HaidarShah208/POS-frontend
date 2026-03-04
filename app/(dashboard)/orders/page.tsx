@@ -200,6 +200,9 @@ export default function OrdersPage() {
                     <div className="min-w-0">
                       <CardTitle className="text-base leading-tight truncate">
                         {firstItemName ?? "—"}
+                         
+                         
+
                         {moreCount > 0 && (
                           <span className="ml-2 text-sm font-normal text-[var(--muted-foreground)]">
                             +{moreCount} more
@@ -221,6 +224,9 @@ export default function OrdersPage() {
                   </Badge>
                 </CardHeader>
                 <CardContent>
+                  <p className="text-xs text-[var(--muted-foreground)]">
+                    Order # {order.orderNumber}
+                  </p>
                   <p className="text-sm pb-2 text-[var(--muted-foreground)]">
                     {(order.items?.length ?? 0)} item(s) · {formatCurrency(order.grandTotal)}
                   </p>
