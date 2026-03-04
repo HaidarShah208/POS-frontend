@@ -50,7 +50,27 @@ export function SettingsView() {
     return () => window.removeEventListener("beforeunload", onBeforeUnload);
   }, [dirty]);
 
-  const handleSave = () => {
+  const handleSave = async () => {
+    try {
+      // If logo is still a data URL, upload it to the backend first.
+      const logo = settings.receipt.logoUrl;
+      if (logo && logo.startsWith("data:")) {
+        const res = await fetch("/api/uploads/logo", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ data: logo }),
+        });
+        if (res.ok) {
+          const json = (await res.json()) as { url?: string };
+          if (json.url) {
+            dispatch(setReceipt({ logoUrl: json.url }));
+          }
+        }
+      }
+    } catch {
+      // Ignore upload errors; user can retry.
+    }
+
     dispatch(saveSettings());
     setDirty(false);
     setSaved(true);
@@ -358,11 +378,11 @@ function ReceiptSection({
         {settings.logoUrl ? <img src={settings.logoUrl} alt="Logo" className="h-10 mx-auto mb-2 object-contain" /> : <div className="h-10 mx-auto mb-2 flex items-center justify-center text-gray-400 text-xs">Logo</div>}
         <p className="text-center text-sm font-medium mb-2">{settings.headerText || "Header"}</p>
         <div className="text-xs space-y-1 border-t border-gray-200 pt-2 mt-2">
-          <div className="flex justify-between"><span>Item A x 2</span><span>$10.00</span></div>
-          <div className="flex justify-between"><span>Item B x 1</span><span>$5.00</span></div>
+          <div className="flex justify-between"><span>Item A x 2</span><span>Rs. 10.00</span></div>
+          <div className="flex justify-between"><span>Item B x 1</span><span>Rs. 5.00</span></div>
         </div>
         <div className="text-xs space-y-1 border-t border-gray-200 pt-2 mt-2">
-          <div className="flex justify-between"><span>Total</span><span>$15.00</span></div>
+          <div className="flex justify-between"><span>Total</span><span>Rs. 15.00</span></div>
         </div>
         {settings.showQrCode && <div className="mt-2 w-12 h-12 mx-auto bg-gray-200 rounded flex items-center justify-center text-[10px]">QR</div>}
         <p className="text-center text-xs mt-2">{settings.footerMessage || "Footer"}</p>

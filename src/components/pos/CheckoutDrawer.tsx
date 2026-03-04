@@ -194,9 +194,15 @@ export function CheckoutDrawer({ open, onOpenChange, onSuccessClose }: CheckoutD
 
   const handlePlaceOrder = async () => {
     try {
+      const sanitizedItems = items.map((item) => {
+        const basePrice = Number(item.price);
+        const safePrice = Number.isFinite(basePrice) && basePrice >= 0 ? basePrice : 0;
+        return { ...item, price: safePrice };
+      });
+
       const result = await placeOrder({
         ...(user?.branchId && { branchId: user.branchId }),
-        items,
+        items: sanitizedItems,
         subtotal,
         tax,
         discount: discountAmount,

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useCallback } from "react";
+import { useMemo, useState, useCallback } from "react";
 import Link from "next/link";
 import { CategoryList } from "@/components/pos/CategoryList";
 import { ProductGrid } from "@/components/pos/ProductGrid";
@@ -9,10 +9,12 @@ import { CartDrawer } from "@/components/pos/CartDrawer";
 import { CheckoutDrawer } from "@/components/pos/CheckoutDrawer";
 import { Button } from "@/components/ui/button";
 import { useAddToCartMutation, useGetCartQuery } from "@/redux/api/cart";
-import { useGetProductsQuery, useGetCategoriesQuery } from "@/redux/api";
+import { useGetProductsQuery, useGetCategoriesQuery, useGetInventoryByBranchQuery } from "@/redux/api";
 import { usePosKeyboardShortcuts } from "@/hooks/usePosKeyboardShortcuts";
-import type { Product } from "@/types/api/index";
-import { ArrowLeft, X } from "lucide-react";
+import { useAppSelector } from "@/hooks/redux";
+import type { Product, InventoryItem } from "@/types/api/index";
+import { ArrowLeft } from "lucide-react";
+import { toast } from "sonner";
 
 export default function POSPage() {
   useGetCartQuery(); // Prime cart cache so selectors have data
@@ -22,6 +24,20 @@ export default function POSPage() {
   const defaultCategoryId = categories[0]?.id ?? null;
   const isLoading = productsLoading || categoriesLoading || productsUninitialized || categoriesUninitialized;
   const [addToCart] = useAddToCartMutation();
+  const user = useAppSelector((s) => s.auth?.user);
+  const branchId = user?.branchId;
+  const { data: inventoryResponse } = useGetInventoryByBranchQuery(
+    branchId ? { branchId, limit: 500 } : ({} as { branchId: string }),
+    { skip: !branchId }
+  );
+  const inventoryMap = useMemo(() => {
+    const map: Record<string, InventoryItem> = {};
+    (inventoryResponse?.data ?? []).forEach((item) => {
+      map[item.productId] = item;
+    });
+    return map;
+  }, [inventoryResponse]);
+
   const [activeCategoryId, setActiveCategoryId] = useState<string | null>(null);
   const [categoryIdToScroll, setCategoryIdToScroll] = useState<string | null>(null);
   const [cartDrawerOpen, setCartDrawerOpen] = useState(false);
@@ -50,6 +66,11 @@ export default function POSPage() {
 
   const handleAddToCart = useCallback(
     (product: Product) => {
+      const inv = inventoryMap[product.id];
+      if (inv && inv.currentStock <= 0) {
+        toast.error("This product is out of stock.");
+        return;
+      }
       addToCart({
         productId: product.id,
         name: product.name,
@@ -57,7 +78,7 @@ export default function POSPage() {
         image: product.image ?? undefined,
       });
     },
-    [addToCart]
+    [addToCart, inventoryMap]
   );
 
   return (

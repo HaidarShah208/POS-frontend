@@ -6,10 +6,11 @@ import Link from "next/link";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { useGetOrdersQuery } from "@/redux/api/ordersEndpoints";
+import { Skeleton } from "@/components/ui/skeleton";
 import { formatCurrency } from "@/lib/utils";
 
 export function DashboardView() {
-  const { data: ordersResponse } = useGetOrdersQuery({ limit: 500 });
+  const { data: ordersResponse, isLoading } = useGetOrdersQuery({ limit: 500 });
   const orders = ordersResponse?.data ?? [];
 
   const { todaySales, todayCount } = useMemo(() => {
@@ -35,8 +36,19 @@ export function DashboardView() {
             <CardTitle className="text-sm font-medium">Sales today</CardTitle>
           </CardHeader>
           <CardContent>
-            <p className="text-2xl font-bold">{formatCurrency(Number.isFinite(todaySales) ? todaySales : 0)}</p>
-            <p className="text-xs text-[var(--muted-foreground)]">From orders today</p>
+            {isLoading ? (
+              <>
+                <Skeleton className="h-7 w-24 mb-2" />
+                <Skeleton className="h-3 w-32" />
+              </>
+            ) : (
+              <>
+                <p className="text-2xl font-bold">
+                  {formatCurrency(Number.isFinite(todaySales) ? todaySales : 0)}
+                </p>
+                <p className="text-xs text-[var(--muted-foreground)]">From orders today</p>
+              </>
+            )}
           </CardContent>
         </Card>
         <Card>
@@ -44,8 +56,17 @@ export function DashboardView() {
             <CardTitle className="text-sm font-medium">Orders today</CardTitle>
           </CardHeader>
           <CardContent>
-            <p className="text-2xl font-bold">{todayCount}</p>
-            <p className="text-xs text-[var(--muted-foreground)]">Today</p>
+            {isLoading ? (
+              <>
+                <Skeleton className="h-7 w-12 mb-2" />
+                <Skeleton className="h-3 w-20" />
+              </>
+            ) : (
+              <>
+                <p className="text-2xl font-bold">{todayCount}</p>
+                <p className="text-xs text-[var(--muted-foreground)]">Today</p>
+              </>
+            )}
           </CardContent>
         </Card>
         <Card>
