@@ -9,6 +9,7 @@ import { useGetOrdersQuery } from "@/redux/api/ordersEndpoints";
 import { formatCurrency } from "@/lib/utils";
 import type { Order } from "@/types/api/index";
 import type { OrderStatus } from "@/types/api/index";
+import { Skeleton } from "@/components/ui/skeleton";
 
 const DATE_PRESETS = [
   { value: "today", label: "Today" },
@@ -65,11 +66,12 @@ function getDateRange(preset: (typeof DATE_PRESETS)[number]["value"]): { dateFro
 function filterOrdersBySearch(orders: Order[], search: string): Order[] {
   if (!search.trim()) return orders;
   const q = search.trim().toLowerCase();
-  return orders.filter(
-    (o) =>
-      (o.orderNumber ?? "").toLowerCase().includes(q) ||
-      String(o.tokenNumber ?? "").toLowerCase().includes(q)
-  );
+  return orders.filter((o) => {
+    if ((o.orderNumber ?? "").toLowerCase().includes(q)) return true;
+    if (String(o.tokenNumber ?? "").toLowerCase().includes(q)) return true;
+    const matchItem = (o.items ?? []).some((item) => (item.name ?? "").toLowerCase().includes(q));
+    return matchItem;
+  });
 }
 
 function getPageNumbers(current: number, totalPages: number): (number | "ellipsis")[] {
@@ -168,7 +170,20 @@ export default function OrdersPage() {
       </div>
 
       {isLoading ? (
-        <div className="h-48 rounded-lg border border-[var(--border)] animate-pulse bg-[var(--muted)]/30" />
+        <div className="space-y-4">
+          {[1, 2, 3].map((i) => (
+            <div key={i} className="rounded-lg border border-[var(--border)] bg-[var(--card)] p-4">
+              <div className="flex items-center justify-between gap-3 pb-2">
+                <Skeleton className="h-5 w-48" />
+                <Skeleton className="h-6 w-20 rounded-full" />
+              </div>
+              <div className="space-y-2">
+                <Skeleton className="h-4 w-32" />
+                <Skeleton className="h-3 w-40" />
+              </div>
+            </div>
+          ))}
+        </div>
       ) : filteredOrders.length === 0 ? (
         <p className="text-[var(--muted-foreground)]">
           {orders.length === 0 ? "No orders in this date range." : "No orders match your search."}
@@ -206,11 +221,26 @@ export default function OrdersPage() {
                   </Badge>
                 </CardHeader>
                 <CardContent>
-                  <p className="text-sm text-[var(--muted-foreground)]">
+                  <p className="text-sm pb-2 text-[var(--muted-foreground)]">
                     {(order.items?.length ?? 0)} item(s) · {formatCurrency(order.grandTotal)}
                   </p>
-                  <p className="text-xs text-[var(--muted-foreground)]">
-                    {new Date(order.createdAt).toLocaleString()}
+                  <p className="text-xs text-[var(--muted-foreground)] flex justify-between items-center">
+                    <span>
+                      {(() => {
+                        const d = new Date(order.createdAt);
+                        const day = String(d.getDate()).padStart(2, "0");
+                        const month = String(d.getMonth() + 1).padStart(2, "0");
+                        const year = d.getFullYear();
+                        return `${day}-${month}-${year}`;
+                      })()}
+                    </span>
+                    <span>
+                      {new Date(order.createdAt).toLocaleTimeString("en-PK", {
+                        hour: "2-digit",
+                        minute: "2-digit",
+                        hour12: true,
+                      })}
+                    </span>
                   </p>
                 </CardContent>
               </Card>

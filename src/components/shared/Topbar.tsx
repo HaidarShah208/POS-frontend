@@ -19,6 +19,7 @@ export function Topbar({ onMenuClick }: TopbarProps) {
   const router = useRouter();
   const dispatch = useAppDispatch();
   const user = useAppSelector((s) => s.auth?.user);
+  const businessName = useAppSelector((s) => s.settings?.general?.businessName?.trim()) || "Restaurant POS";
   const [searchOpen, setSearchOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [notifOpen, setNotifOpen] = useState(false);
@@ -58,7 +59,7 @@ export function Topbar({ onMenuClick }: TopbarProps) {
           </svg>
         </Button>
       
-        <span className="text-sm font-medium  lg:hidden">Cheezy Bites</span>
+        <span className="text-sm font-medium lg:hidden">{businessName}</span>
       </div>
 
       <div className="flex items-center  gap-1">

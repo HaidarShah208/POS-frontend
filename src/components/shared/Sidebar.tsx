@@ -9,13 +9,14 @@ import { cn } from "@/lib/utils";
 export function Sidebar() {
   const pathname = usePathname();
   const user = useAppSelector((s) => s.auth?.user);
+  const businessName = useAppSelector((s) => s.settings?.general?.businessName?.trim()) || "Restaurant POS";
   const navItems = user ? getNavItemsForRole(user.role) : [];
 
   return (
     <aside className="flex h-full  flex-col border-r border-[var(--border)] ">
       <div className="px-4 pt-4 pb-[15px] border-b border-[var(--border)]">
         <Link href="/dashboard" className="text-lg font-bold text-[var(--foreground)]">
-          Cheezy Bites
+          {businessName}
         </Link>
       </div>
       <nav className="flex-1 space-y-1 p-2">
