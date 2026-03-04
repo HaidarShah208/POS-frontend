@@ -20,6 +20,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { formatCurrency } from "@/lib/utils";
 import { cn } from "@/lib/utils";
+import { toast } from "sonner";
 import type { GeneralSettings, POSPreferences } from "@/types/settings";
 
 type TabId = "general" | "categories" | "tax" | "receipt" | "payment" | "pos";
@@ -50,31 +51,50 @@ export function SettingsView() {
     return () => window.removeEventListener("beforeunload", onBeforeUnload);
   }, [dirty]);
 
+  const [pendingLogoFile, setPendingLogoFile] = useState<File | null>(null);
+
+  const apiBase = typeof window !== "undefined"
+    ? (process.env.NEXT_PUBLIC_API_URL || process.env.NEXT_PUBLIC_BACKEND_URL || "").replace(/\/$/, "")
+    : "";
+
   const handleSave = async () => {
+    let logoUploadFailed = false;
     try {
-      // If logo is still a data URL, upload it to the backend first.
-      const logo = settings.receipt.logoUrl;
-      if (logo && logo.startsWith("data:")) {
-        const res = await fetch("/api/uploads/logo", {
+      if (pendingLogoFile) {
+        const formData = new FormData();
+        formData.append("logo", pendingLogoFile);
+        const uploadUrl = apiBase ? `${apiBase}/api/uploads/logo` : "/api/uploads/logo";
+        const res = await fetch(uploadUrl, {
           method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ data: logo }),
+          body: formData,
         });
         if (res.ok) {
-          const json = (await res.json()) as { url?: string };
-          if (json.url) {
-            dispatch(setReceipt({ logoUrl: json.url }));
+          const json = (await res.json()) as { filename?: string };
+          if (json.filename) {
+            const logoUrl = apiBase ? `${apiBase}/api/files/logo/${json.filename}` : `/api/files/logo/${json.filename}`;
+            dispatch(setReceipt({ logoUrl }));
           }
+          setPendingLogoFile(null);
+        } else {
+          const data = (await res.json().catch(() => ({}))) as { error?: string };
+          const msg = res.status === 413 || /file size|too large/i.test(data?.error ?? "")
+            ? "Max file size is 2MB only"
+            : data?.error ?? "Logo upload failed";
+          toast.error(msg);
+          logoUploadFailed = true;
         }
       }
     } catch {
-      // Ignore upload errors; user can retry.
+      toast.error("Logo upload failed");
+      logoUploadFailed = true;
     }
 
-    dispatch(saveSettings());
-    setDirty(false);
-    setSaved(true);
-    setTimeout(() => setSaved(false), 2000);
+    if (!logoUploadFailed) {
+      dispatch(saveSettings());
+      setDirty(false);
+      setSaved(true);
+      setTimeout(() => setSaved(false), 2000);
+    }
   };
 
   return (
@@ -115,7 +135,12 @@ export function SettingsView() {
       
 
         {activeTab === "receipt" && (
-          <ReceiptSection settings={settings.receipt} onChange={(p) => { dispatch(setReceipt(p)); markDirty(); }} />
+          <ReceiptSection
+            settings={settings.receipt}
+            onChange={(p) => { dispatch(setReceipt(p)); markDirty(); }}
+            pendingLogoFile={pendingLogoFile}
+            onLogoFileSelect={(file) => { setPendingLogoFile(file); markDirty(); }}
+          />
         )}
 
         {activeTab === "payment" && (
@@ -288,22 +313,35 @@ function CategoriesSection() {
 function ReceiptSection({
   settings,
   onChange,
+  pendingLogoFile,
+  onLogoFileSelect,
 }: {
   settings: { logoUrl: string; headerText: string; footerMessage: string; showQrCode: boolean; paperSize: "80mm" | "a4" };
   onChange: (p: Partial<typeof settings>) => void;
+  pendingLogoFile: File | null;
+  onLogoFileSelect: (file: File | null) => void;
 }) {
   const is80 = settings.paperSize === "80mm";
   const fileInputId = "receipt-logo-input";
+  const [previewUrl, setPreviewUrl] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (!pendingLogoFile) {
+      setPreviewUrl(null);
+      return;
+    }
+    const url = URL.createObjectURL(pendingLogoFile);
+    setPreviewUrl(url);
+    return () => URL.revokeObjectURL(url);
+  }, [pendingLogoFile]);
+
+  const logoDisplayUrl = previewUrl ?? (settings.logoUrl || null);
 
   const handleLogoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
-    const reader = new FileReader();
-    reader.onload = () => {
-      const value = typeof reader.result === "string" ? reader.result : "";
-      if (value) onChange({ logoUrl: value });
-    };
-    reader.readAsDataURL(file);
+    onLogoFileSelect(file);
+    e.target.value = "";
   };
 
   return (
@@ -320,8 +358,8 @@ function ReceiptSection({
             htmlFor={fileInputId}
             className="mt-1 flex h-20 cursor-pointer items-center justify-center rounded-lg border border-[var(--border)] bg-[var(--background)] text-xs text-[var(--muted-foreground)] overflow-hidden"
           >
-            {settings.logoUrl ? (
-              <img src={settings.logoUrl} alt="Logo preview" className="h-full w-full object-contain" />
+            {logoDisplayUrl ? (
+              <img src={logoDisplayUrl} alt="Logo preview" className="h-full w-full object-contain" />
             ) : (
               <span>Click to upload logo</span>
             )}
@@ -375,7 +413,7 @@ function ReceiptSection({
       </div>
       <div className={cn("border border-[var(--border)] rounded-lg bg-white text-black p-4 shrink-0", is80 ? "w-[280px]" : "w-[210px]")}>
         <p className="text-xs text-center text-gray-500 mb-2">Live preview</p>
-        {settings.logoUrl ? <img src={settings.logoUrl} alt="Logo" className="h-10 mx-auto mb-2 object-contain" /> : <div className="h-10 mx-auto mb-2 flex items-center justify-center text-gray-400 text-xs">Logo</div>}
+        {logoDisplayUrl ? <img src={logoDisplayUrl} alt="Logo" className="h-10 mx-auto mb-2 object-contain" /> : <div className="h-10 mx-auto mb-2 flex items-center justify-center text-gray-400 text-xs">Logo</div>}
         <p className="text-center text-sm font-medium mb-2">{settings.headerText || "Header"}</p>
         <div className="text-xs space-y-1 border-t border-gray-200 pt-2 mt-2">
           <div className="flex justify-between"><span>Item A x 2</span><span>Rs. 10.00</span></div>
