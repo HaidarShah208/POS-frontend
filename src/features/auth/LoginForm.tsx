@@ -34,7 +34,7 @@ export function LoginForm() {
     <div className="space-y-8">
       <div>
         <h1 className="text-2xl font-bold tracking-tight text-foreground">Welcome Back!</h1>
-        <p className="mt-1 text-sm text-muted-foreground">Sign in with your Username and Password.</p>
+        <p className="mt-1 text-sm text-muted-foreground">Sign in with your Email and Password.</p>
       </div>
 
       <form onSubmit={handleSubmit(onSubmit)} className="space-y-5">
