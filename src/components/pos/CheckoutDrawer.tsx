@@ -44,7 +44,7 @@ const STEP_ORDER: CheckoutStep[] = [
   "Order Review",
   "Order Type",
   "Payment Method",
-  "Payment Summary",
+  "Payment",
   "Processing",
   "Success",
 ];
@@ -343,7 +343,7 @@ export function CheckoutDrawer({ open, onOpenChange, onSuccessClose }: CheckoutD
               </motion.div>
             )}
 
-            {currentStepName === "Payment Summary" && (
+            {currentStepName === "Payment" && (
               <motion.div
                 key="summary"
                 initial={{ opacity: 0, x: 10 }}

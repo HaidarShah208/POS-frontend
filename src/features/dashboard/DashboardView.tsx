@@ -275,55 +275,61 @@ export function DashboardView() {
         />
       </div>
 
-      <div className="grid gap-6 lg:grid-cols-7">
-        <ChartCard title="Revenue (Last 7 Days)" loading={isLoading} className="lg:col-span-4">
-          <div className="h-[220px] flex items-end gap-1.5 pt-4">
-            {analytics.salesByDay.map((d, i) => (
-              <div key={d.date} className="flex-1 flex flex-col items-center gap-1 min-w-0">
-                <span className="text-[10px] text-[var(--muted-foreground)] font-medium truncate w-full text-center">
-                  {formatCurrency(d.sales).split(".")[0]}
-                </span>
-                <div className="w-full flex-1 flex items-end">
-                  <motion.div
-                    initial={{ height: 0 }}
-                    animate={{ height: `${Math.max((d.sales / maxDaySales) * 100, 2)}%` }}
-                    transition={{ delay: i * 0.08, duration: 0.4 }}
-                    className="w-full rounded-t-md bg-[var(--primary)]"
-                  />
+      <div className="grid gap-6 lg:grid-cols-2">
+        <ChartCard title="Revenue (Last 7 Days)" loading={isLoading}>
+          <div className="flex items-end gap-3" style={{ height: 220 }}>
+            {analytics.salesByDay.map((d, i) => {
+              const pct = Math.max((d.sales / maxDaySales) * 100, 4);
+              return (
+                <div key={d.date} className="flex-1 flex flex-col items-center min-w-0 h-full">
+                  <div className="relative w-full flex-1">
+                    <motion.div
+                      initial={{ height: 0 }}
+                      animate={{ height: `${pct}%` }}
+                      transition={{ delay: i * 0.08, duration: 0.5 }}
+                      className="absolute bottom-0 inset-x-0 rounded-t-lg bg-[var(--primary)] cursor-pointer"
+                    >
+                      <span className="absolute -top-5 left-1/2 -translate-x-1/2 whitespace-nowrap text-[10px] font-semibold text-[var(--foreground)]">
+                        {d.sales >= 1000 ? `${(d.sales / 1000).toFixed(1)}k` : Math.round(d.sales)}
+                      </span>
+                    </motion.div>
+                  </div>
+                  <span className="mt-2 text-xs font-medium text-[var(--muted-foreground)]">
+                    {d.label}
+                  </span>
                 </div>
-                <span className="text-[11px] text-[var(--muted-foreground)]">{d.label}</span>
-              </div>
-            ))}
+              );
+            })}
           </div>
         </ChartCard>
 
-        <ChartCard title="Hourly Sales (Today)" loading={isLoading} className="lg:col-span-3">
-          <div className="h-[220px] flex items-end gap-1 pt-4 overflow-x-auto">
-            {analytics.filteredHours.length === 0 ? (
-              <p className="text-sm text-[var(--muted-foreground)] m-auto">No sales yet today</p>
-            ) : (
-              analytics.filteredHours.map((h, i) => (
-                <div
-                  key={h.hour}
-                  className="flex-1 min-w-[24px] flex flex-col items-center gap-1"
-                >
-                  <div className="w-full flex-1 flex items-end">
-                    <motion.div
-                      initial={{ height: 0 }}
-                      animate={{
-                        height: `${Math.max((h.sales / maxHourSales) * 100, 2)}%`,
-                      }}
-                      transition={{ delay: i * 0.04, duration: 0.3 }}
-                      className="w-full rounded-t-md bg-[var(--accent)]"
-                    />
+        <ChartCard title="Hourly Sales (Today)" loading={isLoading}>
+          {analytics.filteredHours.length === 0 ? (
+            <div className="flex items-center justify-center" style={{ height: 220 }}>
+              <p className="text-sm text-[var(--muted-foreground)]">No sales yet today</p>
+            </div>
+          ) : (
+            <div className="flex items-end gap-1" style={{ height: 220 }}>
+              {analytics.filteredHours.map((h, i) => {
+                const pct = Math.max((h.sales / maxHourSales) * 100, 4);
+                return (
+                  <div key={h.hour} className="flex-1 flex flex-col items-center min-w-0 h-full">
+                    <div className="relative w-full flex-1">
+                      <motion.div
+                        initial={{ height: 0 }}
+                        animate={{ height: `${pct}%` }}
+                        transition={{ delay: i * 0.04, duration: 0.3 }}
+                        className="absolute bottom-0 inset-x-0.5 rounded-t-lg bg-[var(--accent)]"
+                      />
+                    </div>
+                    <span className="mt-2 text-[10px] text-[var(--muted-foreground)]">
+                      {h.hour % 2 === 0 ? h.label : ""}
+                    </span>
                   </div>
-                  <span className="text-[10px] text-[var(--muted-foreground)]">
-                    {h.hour % 2 === 0 ? h.label : ""}
-                  </span>
-                </div>
-              ))
-            )}
-          </div>
+                );
+              })}
+            </div>
+          )}
         </ChartCard>
       </div>
 

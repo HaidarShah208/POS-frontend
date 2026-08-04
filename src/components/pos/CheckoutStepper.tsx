@@ -8,7 +8,7 @@ export const CHECKOUT_STEPS = [
   "Order Review",
   "Order Type",
   "Payment Method",
-  "Payment Summary",
+  "Payment",
   "Processing",
   "Success",
 ] as const;
