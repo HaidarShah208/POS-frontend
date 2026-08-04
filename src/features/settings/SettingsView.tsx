@@ -40,6 +40,7 @@ import {
   UtensilsCrossed,
   ShoppingBag,
   Truck,
+  Car,
   Printer,
   Volume2,
   ChefHat,
@@ -586,6 +587,7 @@ const ORDER_TYPE_ICONS: Record<string, React.ReactNode> = {
   "dine-in": <UtensilsCrossed className="h-4 w-4" />,
   takeaway: <ShoppingBag className="h-4 w-4" />,
   delivery: <Truck className="h-4 w-4" />,
+  "drive-through": <Car className="h-4 w-4" />,
 };
 
 function POSSection({
@@ -601,7 +603,7 @@ function POSSection({
         <div className="rounded-lg border border-[var(--border)] bg-[var(--background)] px-4 py-3.5">
           <label className="text-sm font-medium block mb-2">Default order type</label>
           <div className="flex gap-2">
-            {(["dine-in", "takeaway", "delivery"] as const).map((type) => (
+            {(["dine-in", "takeaway", "delivery", "drive-through"] as const).map((type) => (
               <Button
                 key={type}
                 type="button"
@@ -611,7 +613,7 @@ function POSSection({
                 onClick={() => onChange({ defaultOrderType: type })}
               >
                 {ORDER_TYPE_ICONS[type]}
-                {type === "dine-in" ? "Dine-in" : type.charAt(0).toUpperCase() + type.slice(1)}
+                {type === "dine-in" ? "Dine-in" : type === "drive-through" ? "Drive Thru" : type.charAt(0).toUpperCase() + type.slice(1)}
               </Button>
             ))}
           </div>

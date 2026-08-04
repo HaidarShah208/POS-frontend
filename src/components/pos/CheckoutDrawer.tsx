@@ -15,7 +15,7 @@ import { OrderTypeSelector } from "./OrderTypeSelector";
 import { PaymentMethodSelector } from "./PaymentMethodSelector";
 import { TokenDisplay } from "./TokenDisplay";
 import { CheckoutStepper, type CheckoutStep } from "./CheckoutStepper";
-import { useAppSelector } from "@/hooks/redux";
+import { useAppSelector, useAppDispatch } from "@/hooks/redux";
 import {
   selectCartItems,
   selectCartTotals,
@@ -32,7 +32,11 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { toast } from "sonner";
 import type { SettingsState } from "@/types/settings";
 import type { Order } from "@/types/api/index";
-import { X, Printer, PlusCircle, ShoppingCart } from "lucide-react";
+import { ReceiptPreview } from "@/components/receipt/ReceiptPreview";
+import { printReceipt, downloadReceiptPDF } from "@/lib/receipt";
+import { addNotification } from "@/redux/slices/notificationSlice";
+import { X, Printer, PlusCircle, ShoppingCart, Download, Eye, EyeOff } from "lucide-react";
+import { svg } from "framer-motion/client";
 
 interface CheckoutDrawerProps {
   open: boolean;
@@ -56,115 +60,13 @@ type PlacedOrderSummary = {
   grandTotal: number;
 };
 
-function escapeHtml(text: string): string {
-  return text
-    .replace(/&/g, "&amp;")
-    .replace(/</g, "&lt;")
-    .replace(/>/g, "&gt;")
-    .replace(/\"/g, "&quot;")
-    .replace(/'/g, "&#39;");
-}
-
-function buildReceiptHtml(order: Order, settings: SettingsState, summary: PlacedOrderSummary | null): string {
-  const general = settings.general;
-  const receipt = settings.receipt;
-  const businessName = escapeHtml(general.businessName || "Restaurant POS");
-  const headerText = escapeHtml(receipt.headerText || "");
-  const footerMessage = escapeHtml(receipt.footerMessage || "");
-  const createdAt = new Date(order.createdAt);
-  const dateStr = `${String(createdAt.getDate()).padStart(2, "0")}-${String(createdAt.getMonth() + 1).padStart(2, "0")}-${createdAt.getFullYear()}`;
-  const timeStr = createdAt.toLocaleTimeString("en-PK", {
-    hour: "2-digit",
-    minute: "2-digit",
-    hour12: true,
-  });
-  const itemsRows = (order.items ?? [])
-    .map(
-      (item) =>
-        `<tr><td>${escapeHtml(item.name)}</td><td style=\"text-align:right;\">${item.quantity}</td><td style=\"text-align:right;\">${formatCurrency(
-          item.price * item.quantity
-        )}</td></tr>`
-    )
-    .join("");
-
-  const useSummary = summary ?? {
-    subtotal: order.subtotal,
-    tax: order.tax,
-    discountAmount: order.discount,
-    grandTotal: order.grandTotal,
-  };
-
-  const paperWidth = receipt.paperSize === "a4" ? "80mm" : "58mm";
-
-  return `<!DOCTYPE html>
-<html>
-  <head>
-    <meta charSet="utf-8" />
-    <title>Receipt ${escapeHtml(order.orderNumber)}</title>
-    <style>
-      * { box-sizing: border-box; margin: 0; padding: 0; }
-      body { font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; padding: 10px; }
-      .receipt { width: ${paperWidth}; margin: 0 auto; font-size: 11px; color: #111827; }
-      .center { text-align: center; }
-      .muted { color: #6b7280; }
-      .header { margin-bottom: 6px; }
-      .logo { max-height: 40px; margin: 0 auto 4px; object-fit: contain; display: block; }
-      table { width: 100%; border-collapse: collapse; margin-top: 6px; }
-      td { padding: 2px 0; }
-      .totals td { padding-top: 4px; }
-      .totals tr:nth-child(odd) td { border-top: 1px solid #e5e7eb; }
-      .qr { width: 48px; height: 48px; margin: 6px auto 0; background: #e5e7eb; display: flex; align-items: center; justify-content: center; font-size: 9px; color: #6b7280; }
-      @media print {
-        body { padding: 0; }
-      }
-    </style>
-  </head>
-  <body>
-    <div class="receipt">
-      <div class="header center">
-        ${receipt.logoUrl ? `<img src="${receipt.logoUrl}" alt="Logo" class="logo" />` : ""}
-        <div style="font-weight:600; margin-bottom:2px;">${businessName}</div>
-        ${headerText ? `<div class="muted" style="margin-bottom:4px;">${headerText}</div>` : ""}
-        <div class="muted">${escapeHtml(order.orderNumber)} · ${escapeHtml(order.orderType)}</div>
-        <div class="muted">${dateStr} ${timeStr}</div>
-      </div>
-      <table>
-        <tbody>
-          ${itemsRows}
-        </tbody>
-      </table>
-      <table class="totals">
-        <tbody>
-          <tr><td>Subtotal</td><td style="text-align:right;">${formatCurrency(useSummary.subtotal)}</td></tr>
-          <tr><td>Tax</td><td style="text-align:right;">${formatCurrency(useSummary.tax)}</td></tr>
-          ${useSummary.discountAmount ? `<tr><td>Discount</td><td style="text-align:right;">-${formatCurrency(useSummary.discountAmount)}</td></tr>` : ""}
-          <tr><td style="font-weight:600;">Total</td><td style="text-align:right;font-weight:600;">${formatCurrency(useSummary.grandTotal)}</td></tr>
-        </tbody>
-      </table>
-      ${receipt.showQrCode ? '<div class="qr">QR</div>' : ""}
-      ${footerMessage ? `<p class="muted center" style="margin-top:6px;">${footerMessage}</p>` : ""}
-    </div>
-  </body>
-</html>`;
-}
-
-function openReceiptPrintWindow(order: Order, settings: SettingsState, summary: PlacedOrderSummary | null) {
-  if (typeof window === "undefined") return;
-  const html = buildReceiptHtml(order, settings, summary);
-  const w = window.open("", "_blank", "width=400,height=600");
-  if (!w) return;
-  w.document.open();
-  w.document.write(html);
-  w.document.close();
-  w.focus();
-  w.print();
-}
-
 export function CheckoutDrawer({ open, onOpenChange, onSuccessClose }: CheckoutDrawerProps) {
   const [step, setStep] = useState(0);
   const [placedToken, setPlacedToken] = useState<string | null>(null);
   const [placedSummary, setPlacedSummary] = useState<PlacedOrderSummary | null>(null);
   const [placedOrderId, setPlacedOrderId] = useState<string | null>(null);
+  const [showReceipt, setShowReceipt] = useState(false);
+  const dispatch = useAppDispatch();
   const [setOrderType] = useSetOrderTypeMutation();
   const [setPaymentMethod] = useSetPaymentMethodMutation();
   const [clearCart] = useClearCartMutation();
@@ -214,6 +116,7 @@ export function CheckoutDrawer({ open, onOpenChange, onSuccessClose }: CheckoutD
       setPlacedToken(result.tokenNumber);
       setPlacedOrderId(result.orderId);
       clearCart();
+      dispatch(addNotification({ type: "order", title: "Order Placed", message: `Order #${result.tokenNumber} placed successfully — ${formatCurrency(grandTotal)}`, priority: "medium" }));
       setStep(5);
     } catch (err: unknown) {
       const msg =
@@ -398,35 +301,61 @@ export function CheckoutDrawer({ open, onOpenChange, onSuccessClose }: CheckoutD
                 </motion.div>
                 <p className="text-sm text-[var(--muted-foreground)] mb-2">Order placed</p>
                 <TokenDisplay token={placedToken} size="md" className="my-4" />
-                <CartSummary
-                  subtotal={placedSummary?.subtotal ?? subtotal}
-                  tax={placedSummary?.tax ?? tax}
-                  discountAmount={placedSummary?.discountAmount ?? discountAmount}
-                  grandTotal={placedSummary?.grandTotal ?? grandTotal}
-                  className="w-full mt-4"
-                />
+                {!showReceipt ? (
+                  <CartSummary
+                    subtotal={placedSummary?.subtotal ?? subtotal}
+                    tax={placedSummary?.tax ?? tax}
+                    discountAmount={placedSummary?.discountAmount ?? discountAmount}
+                    grandTotal={placedSummary?.grandTotal ?? grandTotal}
+                    className="w-full mt-4"
+                  />
+                ) : placedOrder ? (
+                  <div className="w-full mt-4 rounded-xl border border-[var(--border)] p-4 bg-white">
+                    <ReceiptPreview order={placedOrder} settings={settings} summary={placedSummary} />
+                  </div>
+                ) : null}
               </motion.div>
             )}
           </AnimatePresence>
         </div>
 
         {step === 5 && placedToken && (
-          <div className="shrink-0 border-t border-[var(--border)] bg-[var(--card)] p-4">
+          <div className="shrink-0 border-t border-[var(--border)] bg-[var(--card)] p-4 space-y-2">
             <div className="flex gap-2">
               <Button
                 variant="outline"
-                className="flex-1 gap-2"
-                onClick={() => placedOrder && openReceiptPrintWindow(placedOrder, settings, placedSummary)}
+                size="sm"
+                className="gap-1.5 text-xs"
+                onClick={() => setShowReceipt(!showReceipt)}
+              >
+                {showReceipt ? <EyeOff className="h-3.5 w-3.5" /> : <Eye className="h-3.5 w-3.5" />}
+                {showReceipt ? "Hide" : "Preview"}
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                className="gap-1.5 text-xs"
+                onClick={() => placedOrder && printReceipt(placedOrder, settings, placedSummary)}
                 disabled={!placedOrder}
               >
-                <Printer className="h-4 w-4" />
-                Print Receipt
+                <Printer className="h-3.5 w-3.5" />
+                Print
               </Button>
-              <Button className="flex-1 gap-2" onClick={handleNewOrder}>
-                <PlusCircle className="h-4 w-4" />
-                New Order
+              <Button
+                variant="outline"
+                size="sm"
+                className="gap-1.5 text-xs"
+                onClick={() => placedOrder && downloadReceiptPDF(placedOrder, settings, placedSummary)}
+                disabled={!placedOrder}
+              >
+                <Download className="h-3.5 w-3.5" />
+                Download
               </Button>
             </div>
+            <Button className="w-full gap-2" onClick={handleNewOrder}>
+              <PlusCircle className="h-4 w-4" />
+              New Order
+            </Button>
           </div>
         )}
 

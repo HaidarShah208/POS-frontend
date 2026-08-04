@@ -25,7 +25,7 @@ export interface PlaceOrderResponse {
 export type SubmitOrderResponse = PlaceOrderResponse;
 
 /** Kitchen order status */
-export type KitchenOrderStatus = "NEW" | "PREPARING" | "READY";
+export type KitchenOrderStatus = "NEW" | "PREPARING" | "READY" | "SERVED" | "CANCELLED";
 
 /** Order as sent to kitchen (KDS) */
 export interface KitchenOrderItem {
@@ -43,4 +43,6 @@ export interface KitchenOrder {
   status: KitchenOrderStatus;
   createdAt: string;
   updatedAt?: string;
+  priority?: "normal" | "rush" | "vip";
+  kitchenNotes?: string;
 }

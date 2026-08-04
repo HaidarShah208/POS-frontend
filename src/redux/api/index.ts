@@ -35,12 +35,29 @@ export {
   useGetBranchByIdQuery,
   useCreateBranchMutation,
 } from "./branchesEndpoints";
-export { customersEndpoints, useGetCustomersQuery, useCreateCustomerMutation } from "./customersEndpoints";
+export {
+  customersEndpoints,
+  useGetCustomersQuery,
+  useGetCustomerByIdQuery,
+  useCreateCustomerMutation,
+  useUpdateCustomerMutation,
+  useDeleteCustomerMutation,
+  useGetCustomerOrdersQuery,
+} from "./customersEndpoints";
+export {
+  suppliersEndpoints,
+  useGetSuppliersQuery,
+  useGetSupplierByIdQuery,
+  useCreateSupplierMutation,
+  useUpdateSupplierMutation,
+  useDeleteSupplierMutation,
+  useGetSupplierPurchasesQuery,
+} from "./suppliersEndpoints";
 
-// Ensure all endpoint modules are loaded so they inject into baseApi
 import "./authEndpoints";
 import "./productsEndpoints";
 import "./inventoryEndpoints";
 import "./ordersEndpoints";
 import "./branchesEndpoints";
 import "./customersEndpoints";
+import "./suppliersEndpoints";

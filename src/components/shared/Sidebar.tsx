@@ -14,6 +14,15 @@ import {
   BarChart3,
   ClipboardList,
   Settings,
+  LayoutGrid,
+  Users,
+  Gift,
+  Truck,
+  FileText,
+  Banknote,
+  UserCog,
+  Shield,
+  PieChart,
 } from "lucide-react";
 
 const NAV_ICONS: Record<string, React.ComponentType<{ className?: string }>> = {
@@ -24,6 +33,15 @@ const NAV_ICONS: Record<string, React.ComponentType<{ className?: string }>> = {
   "/inventory": Warehouse,
   "/reports": BarChart3,
   "/orders": ClipboardList,
+  "/floor": LayoutGrid,
+  "/customers": Users,
+  "/loyalty": Gift,
+  "/suppliers": Truck,
+  "/purchase-orders": FileText,
+  "/cash-register": Banknote,
+  "/employees": UserCog,
+  "/roles": Shield,
+  "/analytics": PieChart,
   "/settings": Settings,
 };
 

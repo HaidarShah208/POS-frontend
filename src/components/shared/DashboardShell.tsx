@@ -5,6 +5,9 @@ import { usePathname, useRouter } from "next/navigation";
 import { useAppSelector } from "@/hooks/redux";
 import { Sidebar } from "@/components/shared/Sidebar";
 import { Topbar } from "@/components/shared/Topbar";
+import { OfflineBanner } from "@/components/shared/OfflineBanner";
+import { OfflineSyncProvider } from "@/components/shared/OfflineSyncProvider";
+import { QuickActionsFAB } from "@/components/shared/QuickActionsFAB";
 import {
   Drawer,
   DrawerContent,
@@ -93,14 +96,18 @@ export function DashboardShell({ children }: { children: React.ReactNode }) {
       </Drawer>
 
       <div className="flex flex-1 flex-col min-w-0 overflow-hidden">
+        <OfflineBanner />
         <Topbar
           onMenuClick={() => setSidebarOpen(true)}
           collapsed={collapsed}
           onToggleCollapse={toggleCollapse}
         />
         <main className="flex-1 overflow-auto p-4 md:p-6 bg-[var(--surface)] scroll-area-thin">
-          {children}
+          <OfflineSyncProvider>
+            {children}
+          </OfflineSyncProvider>
         </main>
+        <QuickActionsFAB />
       </div>
     </div>
   );

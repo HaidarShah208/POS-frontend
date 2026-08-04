@@ -29,6 +29,7 @@ import {
   UtensilsCrossed,
   ShoppingBag,
   Truck,
+  Car,
   Banknote,
   CreditCard,
   Smartphone,
@@ -68,6 +69,7 @@ const ORDER_TYPE_ICON: Record<string, React.ComponentType<{ className?: string }
   "dine-in": UtensilsCrossed,
   takeaway: ShoppingBag,
   delivery: Truck,
+  "drive-through": Car,
 };
 
 const PAYMENT_ICON: Record<string, React.ComponentType<{ className?: string }>> = {

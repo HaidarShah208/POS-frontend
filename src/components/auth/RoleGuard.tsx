@@ -28,3 +28,21 @@ export function RoleGuard(props: RoleGuardProps) {
     </div>
   );
 }
+
+type PermissionGateProps = {
+  permission: Permission;
+  children: React.ReactNode;
+  fallback?: React.ReactNode;
+};
+
+export function PermissionGate({ permission, children, fallback }: PermissionGateProps) {
+  const user = useAppSelector((s) => s.auth?.user);
+  const allowed = user && hasPermission(user.role, permission);
+  if (allowed) return <>{children}</>;
+  return fallback ? <>{fallback}</> : null;
+}
+
+export function useHasPermission(permission: Permission): boolean {
+  const user = useAppSelector((s) => s.auth?.user);
+  return !!user && hasPermission(user.role, permission);
+}

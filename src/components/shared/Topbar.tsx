@@ -7,6 +7,9 @@ import { Button } from "@/components/ui/button";
 import { useAppSelector, useAppDispatch } from "@/hooks/redux";
 import { logout, saveAuthToStorage } from "@/redux/api/auth";
 import { cn } from "@/lib/utils";
+import { NotificationCenter } from "./NotificationCenter";
+import { CommandPalette } from "./CommandPalette";
+import { ThemeToggle } from "./ThemeToggle";
 import {
   PanelLeftClose,
   PanelLeftOpen,
@@ -24,6 +27,15 @@ const BREADCRUMB_LABELS: Record<string, string> = {
   settings: "Settings",
   pos: "Sales Counter",
   kitchen: "Kitchen",
+  floor: "Floor Plan",
+  customers: "Customers",
+  loyalty: "Loyalty",
+  suppliers: "Suppliers",
+  "purchase-orders": "Purchase Orders",
+  "cash-register": "Cash Register",
+  employees: "Employees",
+  roles: "Roles & Permissions",
+  analytics: "Analytics",
 };
 
 type TopbarProps = {
@@ -63,7 +75,7 @@ export function Topbar({ onMenuClick, collapsed, onToggleCollapse }: TopbarProps
   }));
 
   return (
-    <header className="sticky top-0 z-40 flex h-[var(--topbar-height)] items-center justify-between gap-4 border-b border-[var(--border)] bg-white/80 backdrop-blur-sm px-4">
+    <header className="sticky top-0 z-40 flex h-[var(--topbar-height)] items-center justify-between gap-4 border-b border-[var(--border)] bg-[var(--background)]/80 backdrop-blur-sm px-4">
       <div className="flex items-center gap-1.5">
         <Button
           variant="ghost"
@@ -118,7 +130,10 @@ export function Topbar({ onMenuClick, collapsed, onToggleCollapse }: TopbarProps
         </span>
       </div>
 
-      <div className="flex items-center gap-1">
+      <div className="flex items-center gap-2">
+        <CommandPalette />
+        <ThemeToggle />
+        <NotificationCenter />
         <div className="relative" ref={profileRef}>
           <Button
             variant="ghost"

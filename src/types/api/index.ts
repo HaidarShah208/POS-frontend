@@ -59,13 +59,33 @@ export interface InventoryItem {
   currentStock: number;
   lowStockThreshold: number;
   product?: Product;
-  /** Optional computed/joined fields from API */
   productName?: string;
   cost?: number;
   stockValue?: number;
   status?: "in_stock" | "low_stock" | "out_of_stock";
+  batchNumber?: string;
+  lotNumber?: string;
+  expiryDate?: string;
+  avgDailySales?: number;
+  daysOfStock?: number;
+  abcClass?: "A" | "B" | "C";
+  barcode?: string;
   createdAt?: string;
   updatedAt?: string;
+}
+
+export type StockMovementType = "purchase" | "sale" | "adjustment" | "transfer" | "waste" | "return" | "damaged";
+
+export interface StockMovement {
+  id: string;
+  productId: string;
+  productName: string;
+  type: StockMovementType;
+  quantity: number;
+  balanceAfter: number;
+  reason?: string;
+  reference?: string;
+  createdAt: string;
 }
 
 export interface OrderItem {
@@ -87,7 +107,7 @@ export type OrderStatus =
   | "completed"
   | "cancelled";
 
-export type OrderType = "dine-in" | "takeaway" | "delivery";
+export type OrderType = "dine-in" | "takeaway" | "delivery" | "drive-through";
 export type PaymentMethod = "cash" | "card" | "mobile" | "other";
 
 export interface Order {
@@ -111,12 +131,40 @@ export interface Order {
   user?: User | null;
 }
 
+export type CustomerStatus = "active" | "inactive" | "vip";
+
 export interface Customer {
   id: string;
   name: string;
   email?: string;
   phone?: string;
+  address?: string;
+  notes?: string;
+  status?: CustomerStatus;
+  totalOrders?: number;
+  totalSpent?: number;
+  lastOrderAt?: string;
+  loyaltyPoints?: number;
+  tags?: string[];
   createdAt?: string;
+  updatedAt?: string;
+}
+
+export interface CustomerOrder {
+  id: string;
+  orderNumber: string;
+  grandTotal: number;
+  status: OrderStatus;
+  orderType: OrderType;
+  itemCount: number;
+  createdAt: string;
+}
+
+export interface GetCustomersParams {
+  page?: number;
+  limit?: number;
+  search?: string;
+  status?: CustomerStatus;
 }
 
 export interface AuthResponse {
@@ -151,7 +199,7 @@ export interface PlaceOrderResponse {
 }
 
 /** Kitchen order status */
-export type KitchenOrderStatus = "NEW" | "PREPARING" | "READY";
+export type KitchenOrderStatus = "NEW" | "PREPARING" | "READY" | "SERVED" | "CANCELLED";
 
 /** Inventory adjust request */
 export interface AdjustStockRequest {
@@ -186,4 +234,42 @@ export interface GetInventoryParams {
   page?: number;
   limit?: number;
   lowStockOnly?: boolean;
+}
+
+/** Supplier types */
+export type SupplierStatus = "active" | "inactive";
+
+export interface Supplier {
+  id: string;
+  name: string;
+  contactPerson?: string;
+  email?: string;
+  phone?: string;
+  address?: string;
+  notes?: string;
+  status: SupplierStatus;
+  totalOrders?: number;
+  totalSpent?: number;
+  outstandingBalance?: number;
+  lastOrderAt?: string;
+  productsSupplied?: string[];
+  createdAt?: string;
+  updatedAt?: string;
+}
+
+export interface SupplierPurchase {
+  id: string;
+  supplierId: string;
+  invoiceNumber: string;
+  amount: number;
+  status: "pending" | "paid" | "partial";
+  items: number;
+  date: string;
+}
+
+export interface GetSuppliersParams {
+  page?: number;
+  limit?: number;
+  search?: string;
+  status?: SupplierStatus;
 }

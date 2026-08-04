@@ -20,7 +20,7 @@ export interface PaymentMethodSetting {
   enabled: boolean;
 }
 
-export type DefaultOrderType = "dine-in" | "takeaway" | "delivery";
+export type DefaultOrderType = "dine-in" | "takeaway" | "delivery" | "drive-through";
 
 export interface POSPreferences {
   defaultOrderType: DefaultOrderType;

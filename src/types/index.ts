@@ -27,7 +27,7 @@ export interface AddToCartPayload {
 }
 
 /** Order type for checkout */
-export type OrderType = "dine-in" | "takeaway" | "delivery";
+export type OrderType = "dine-in" | "takeaway" | "delivery" | "drive-through";
 
 /** Payment method for checkout */
 export type PaymentMethod = "cash" | "card" | "mobile" | "other";
