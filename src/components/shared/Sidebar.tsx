@@ -5,36 +5,77 @@ import { usePathname } from "next/navigation";
 import { useAppSelector } from "@/hooks/redux";
 import { getNavItemsForRole } from "@/lib/permissions";
 import { cn } from "@/lib/utils";
+import {
+  LayoutDashboard,
+  ShoppingCart,
+  ChefHat,
+  Package,
+  Warehouse,
+  BarChart3,
+  ClipboardList,
+  Settings,
+} from "lucide-react";
 
-export function Sidebar() {
+const NAV_ICONS: Record<string, React.ComponentType<{ className?: string }>> = {
+  "/dashboard": LayoutDashboard,
+  "/pos": ShoppingCart,
+  "/kitchen": ChefHat,
+  "/products": Package,
+  "/inventory": Warehouse,
+  "/reports": BarChart3,
+  "/orders": ClipboardList,
+  "/settings": Settings,
+};
+
+type SidebarProps = {
+  collapsed?: boolean;
+};
+
+export function Sidebar({ collapsed = false }: SidebarProps) {
   const pathname = usePathname();
   const user = useAppSelector((s) => s.auth?.user);
-  const businessName = useAppSelector((s) => s.settings?.general?.businessName?.trim()) || "Restaurant POS";
+  const businessName =
+    useAppSelector((s) => s.settings?.general?.businessName?.trim()) || "Restaurant POS";
   const navItems = user ? getNavItemsForRole(user.role) : [];
 
   return (
-    <aside className="flex h-full  flex-col border-r border-[var(--border)] ">
-      <div className="px-4 pt-4 pb-[15px] border-b border-[var(--border)]">
-        <Link href="/dashboard" className="text-lg font-bold text-[var(--foreground)]">
-          {businessName}
+    <div className="flex h-full flex-col">
+      <div
+        className={cn(
+          "flex items-center border-b border-[var(--border)] h-[var(--topbar-height)] shrink-0",
+          collapsed ? "justify-center px-2" : "px-4"
+        )}
+      >
+        <Link
+          href="/dashboard"
+          className="font-bold text-[var(--foreground)] truncate transition-all"
+        >
+          {collapsed ? businessName.charAt(0) : businessName}
         </Link>
       </div>
-      <nav className="flex-1 space-y-1 p-2">
-        {navItems.map((item) => (
-          <Link
-            key={item.href}
-            href={item.href}
-            className={cn(
-              "block rounded-lg px-3 py-2.5 text-sm font-medium transition-colors tap-target",
-              pathname === item.href
-                ? "bg-[var(--primary)] text-[var(--primary-foreground)]"
-                : "text-[var(--foreground)] hover:bg-[var(--border)]"
-            )}
-          >
-            {item.label}
-          </Link>
-        ))}
+      <nav className="flex-1 space-y-1 p-2 overflow-y-auto scroll-area-thin">
+        {navItems.map((item) => {
+          const Icon = NAV_ICONS[item.href];
+          const isActive = pathname === item.href;
+          return (
+            <Link
+              key={item.href}
+              href={item.href}
+              title={collapsed ? item.label : undefined}
+              className={cn(
+                "flex items-center gap-3 rounded-lg text-sm font-medium transition-colors tap-target",
+                collapsed ? "justify-center px-2 py-2.5" : "px-3 py-2.5",
+                isActive
+                  ? "bg-[var(--primary)] text-[var(--primary-foreground)]"
+                  : "text-[var(--muted-foreground)] hover:bg-[var(--muted)] hover:text-[var(--foreground)]"
+              )}
+            >
+              {Icon && <Icon className="h-5 w-5 shrink-0" />}
+              {!collapsed && <span>{item.label}</span>}
+            </Link>
+          );
+        })}
       </nav>
-    </aside>
+    </div>
   );
 }

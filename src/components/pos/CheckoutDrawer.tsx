@@ -32,7 +32,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { toast } from "sonner";
 import type { SettingsState } from "@/types/settings";
 import type { Order } from "@/types/api/index";
-import { Cross, CrossIcon, X } from "lucide-react";
+import { X, Printer, PlusCircle, ShoppingCart } from "lucide-react";
 
 interface CheckoutDrawerProps {
   open: boolean;
@@ -278,13 +278,39 @@ export function CheckoutDrawer({ open, onOpenChange, onSuccessClose }: CheckoutD
                 exit={{ opacity: 0, x: -10 }}
                 className="space-y-4"
               >
+                <div className="flex items-center gap-2 mb-3">
+                  <ShoppingCart className="h-4 w-4 text-[var(--muted-foreground)]" />
+                  <span className="text-sm font-medium text-[var(--muted-foreground)]">
+                    {items.length} item{items.length !== 1 ? "s" : ""} in cart
+                  </span>
+                </div>
                 <ul className="space-y-2">
-                  {items.map((item) => (
-                    <li key={item.id} className="flex justify-between text-sm">
-                      <span>{item.name} × {item.quantity}</span>
-                      <span>{formatCurrency((item.price + (item.modifiers?.reduce((s, m) => s + m.price, 0) ?? 0)) * item.quantity)}</span>
-                    </li>
-                  ))}
+                  {items.map((item) => {
+                    const modTotal = item.modifiers?.reduce((s, m) => s + m.price, 0) ?? 0;
+                    const lineTotal = (item.price + modTotal) * item.quantity;
+                    return (
+                      <li
+                        key={item.id}
+                        className="flex justify-between text-sm rounded-lg border border-[var(--border)] p-3"
+                      >
+                        <div className="min-w-0 flex-1">
+                          <span className="font-medium">{item.name}</span>
+                          <span className="text-[var(--muted-foreground)] ml-1">× {item.quantity}</span>
+                          {item.modifiers && item.modifiers.length > 0 && (
+                            <p className="text-[11px] text-[var(--muted-foreground)] mt-0.5">
+                              {item.modifiers.map((m) => m.name).join(", ")}
+                            </p>
+                          )}
+                          {item.note && (
+                            <p className="text-[11px] italic text-[var(--muted-foreground)] mt-0.5">
+                              {item.note}
+                            </p>
+                          )}
+                        </div>
+                        <span className="font-medium shrink-0 ml-2">{formatCurrency(lineTotal)}</span>
+                      </li>
+                    );
+                  })}
                 </ul>
                 <CartSummary
                   subtotal={subtotal}
@@ -389,14 +415,16 @@ export function CheckoutDrawer({ open, onOpenChange, onSuccessClose }: CheckoutD
             <div className="flex gap-2">
               <Button
                 variant="outline"
-                className="flex-1"
+                className="flex-1 gap-2"
                 onClick={() => placedOrder && openReceiptPrintWindow(placedOrder, settings, placedSummary)}
                 disabled={!placedOrder}
               >
-                Print
+                <Printer className="h-4 w-4" />
+                Print Receipt
               </Button>
-              <Button className="flex-1" onClick={handleNewOrder}>
-                New order
+              <Button className="flex-1 gap-2" onClick={handleNewOrder}>
+                <PlusCircle className="h-4 w-4" />
+                New Order
               </Button>
             </div>
           </div>

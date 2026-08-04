@@ -43,53 +43,79 @@ export function CartPanel({ onCheckoutClick }: CartPanelProps) {
         ) : (
           <ul className="space-y-3">
             <AnimatePresence mode="popLayout">
-              {items.map((item) => (
-                <motion.li
-                  key={item.id}
-                  layout
-                  initial={{ opacity: 0, y: 8 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0, x: -20 }}
-                  transition={{ duration: 0.2 }}
-                  className="flex items-center justify-between gap-2 rounded-lg border border-[var(--border)] p-3"
-                >
-                  <div className="min-w-0 flex-1">
-                    <p className="truncate font-medium text-sm">{item.name}</p>
-                    <p className="text-xs text-[var(--muted-foreground)]">
-                      {formatCurrency(item.price)} × {item.quantity}
-                    </p>
-                  </div>
-                  <div className="flex items-center gap-1">
-                    <Button
-                      variant="outline"
-                      size="icon"
-                      className="pos-touch h-10 w-10 min-h-[44px] min-w-[44px]"
-                      onClick={() => decreaseQty(item.id)}
-                    >
-                      −
-                    </Button>
-                    <span className="min-w-[1.5rem] text-center text-sm font-medium select-none">
-                      {item.quantity}
-                    </span>
-                    <Button
-                      variant="outline"
-                      size="icon"
-                      className="pos-touch h-10 w-10 min-h-[44px] min-w-[44px]"
-                      onClick={() => increaseQty(item.id)}
-                    >
-                      +
-                    </Button>
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      className="pos-touch h-10 w-10 min-h-[44px] min-w-[44px] text-[var(--destructive)]"
-                      onClick={() => removeFromCart(item.id)}
-                    >
-                      ×
-                    </Button>
-                  </div>
-                </motion.li>
-              ))}
+              {items.map((item) => {
+                const modTotal = item.modifiers?.reduce((s, m) => s + m.price, 0) ?? 0;
+                const lineTotal = (item.price + modTotal) * item.quantity;
+                return (
+                  <motion.li
+                    key={item.id}
+                    layout
+                    initial={{ opacity: 0, y: 8 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, x: -20 }}
+                    transition={{ duration: 0.2 }}
+                    className="rounded-lg border border-[var(--border)] p-3"
+                  >
+                    <div className="flex items-start justify-between gap-2">
+                      <div className="min-w-0 flex-1">
+                        <p className="truncate font-medium text-sm">{item.name}</p>
+                        <p className="text-xs text-[var(--muted-foreground)]">
+                          {formatCurrency(item.price)} × {item.quantity}
+                          <span className="ml-1.5 font-medium text-[var(--foreground)]">
+                            = {formatCurrency(lineTotal)}
+                          </span>
+                        </p>
+                        {item.modifiers && item.modifiers.length > 0 && (
+                          <div className="mt-1 flex flex-wrap gap-1">
+                            {item.modifiers.map((mod) => (
+                              <span
+                                key={mod.id}
+                                className="inline-flex items-center rounded-md bg-[var(--muted)] px-1.5 py-0.5 text-[10px] text-[var(--muted-foreground)]"
+                              >
+                                {mod.name} +{formatCurrency(mod.price)}
+                              </span>
+                            ))}
+                          </div>
+                        )}
+                        {item.note && (
+                          <p className="mt-1 text-[11px] italic text-[var(--muted-foreground)] truncate">
+                            {item.note}
+                          </p>
+                        )}
+                      </div>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="pos-touch h-8 w-8 shrink-0 text-[var(--destructive)]"
+                        onClick={() => removeFromCart(item.id)}
+                      >
+                        ×
+                      </Button>
+                    </div>
+                    <div className="flex items-center gap-1 mt-2">
+                      <Button
+                        variant="outline"
+                        size="icon"
+                        className="pos-touch h-9 w-9 min-h-[36px] min-w-[36px]"
+                        onClick={() => decreaseQty(item.id)}
+                      >
+                        −
+                      </Button>
+                      <span className="min-w-[2rem] text-center text-sm font-medium select-none">
+                        {item.quantity}
+                      </span>
+                      <Button
+                        variant="outline"
+                        size="icon"
+                        className="pos-touch h-9 w-9 min-h-[36px] min-w-[36px]"
+                        onClick={() => increaseQty(item.id)}
+                      >
+                        +
+                      </Button>
+                    </div>
+                  </motion.li>
+                );
+              })}
             </AnimatePresence>
           </ul>
         )}

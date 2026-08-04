@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 import { useAppSelector, useAppDispatch } from "@/hooks/redux";
 import {
   setTax,
@@ -16,22 +16,102 @@ import {
   useCreateCategoryMutation,
   useDeleteCategoryMutation,
 } from "@/redux/api/productsEndpoints";
+import { PageMotion } from "@/components/shared/PageMotion";
+import { PageHeader } from "@/components/admin/PageHeader";
+import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { formatCurrency } from "@/lib/utils";
+import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
+import {
+  Building2,
+  FolderOpen,
+  Receipt,
+  CreditCard,
+  SlidersHorizontal,
+  Save,
+  Check,
+  Plus,
+  Trash2,
+  Upload,
+  Banknote,
+  Smartphone,
+  UtensilsCrossed,
+  ShoppingBag,
+  Truck,
+  Printer,
+  Volume2,
+  ChefHat,
+} from "lucide-react";
 import type { GeneralSettings, POSPreferences } from "@/types/settings";
 
 type TabId = "general" | "categories" | "tax" | "receipt" | "payment" | "pos";
 
-const TABS: { id: TabId; label: string }[] = [
-  { id: "general", label: "General" },
-  { id: "categories", label: "Categories" },
-  { id: "receipt", label: "Receipt Designer" },
-  { id: "payment", label: "Payment Methods" },
-  { id: "pos", label: "POS Preferences" },
+const TABS: { id: TabId; label: string; icon: React.ReactNode }[] = [
+  { id: "general", label: "General", icon: <Building2 className="h-4 w-4" /> },
+  { id: "categories", label: "Categories", icon: <FolderOpen className="h-4 w-4" /> },
+  { id: "receipt", label: "Receipt", icon: <Receipt className="h-4 w-4" /> },
+  { id: "payment", label: "Payment", icon: <CreditCard className="h-4 w-4" /> },
+  { id: "pos", label: "POS", icon: <SlidersHorizontal className="h-4 w-4" /> },
 ];
+
+function Toggle({
+  checked,
+  onChange,
+}: {
+  checked: boolean;
+  onChange: (val: boolean) => void;
+}) {
+  return (
+    <button
+      type="button"
+      role="switch"
+      aria-checked={checked}
+      onClick={() => onChange(!checked)}
+      className={cn(
+        "relative inline-flex h-6 w-11 shrink-0 cursor-pointer items-center rounded-full transition-colors",
+        checked ? "bg-[var(--primary)]" : "bg-[var(--muted)]"
+      )}
+    >
+      <span
+        className={cn(
+          "pointer-events-none block h-4 w-4 rounded-full bg-white shadow-sm transition-transform",
+          checked ? "translate-x-6" : "translate-x-1"
+        )}
+      />
+    </button>
+  );
+}
+
+function SettingRow({
+  label,
+  description,
+  icon,
+  children,
+}: {
+  label: string;
+  description?: string;
+  icon?: React.ReactNode;
+  children: React.ReactNode;
+}) {
+  return (
+    <div className="flex items-center justify-between gap-4 rounded-lg border border-[var(--border)] bg-[var(--background)] px-4 py-3.5">
+      <div className="flex items-center gap-3 min-w-0">
+        {icon && (
+          <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-[var(--muted)] text-[var(--muted-foreground)]">
+            {icon}
+          </div>
+        )}
+        <div className="min-w-0">
+          <p className="text-sm font-medium">{label}</p>
+          {description && <p className="text-xs text-[var(--muted-foreground)] mt-0.5">{description}</p>}
+        </div>
+      </div>
+      <div className="shrink-0">{children}</div>
+    </div>
+  );
+}
 
 export function SettingsView() {
   const dispatch = useAppDispatch();
@@ -98,77 +178,104 @@ export function SettingsView() {
   };
 
   return (
-    <div className="flex flex-col lg:flex-row gap-6">
-      {/* Left nav */}
-      <nav className="shrink-0 flex flex-row lg:flex-col gap-1 overflow-x-auto lg:overflow-visible pb-2 lg:pb-0 border-b lg:border-b-0 lg:border-r border-[var(--border)] lg:pr-6">
-        {TABS.map((tab) => (
-          <button
-            key={tab.id}
-            type="button"
-            onClick={() => setActiveTab(tab.id)}
-            className={cn(
-              "px-4 py-2 rounded-lg text-sm font-medium whitespace-nowrap transition-colors",
-              activeTab === tab.id
-                ? "bg-[var(--primary)] text-[var(--primary-foreground)]"
-                : "text-[var(--foreground)] hover:bg-[var(--muted)]"
-            )}
+    <PageMotion>
+      <div className="flex flex-col gap-1 sm:flex-row sm:items-center sm:justify-between">
+        <PageHeader title="Settings" description="Manage your restaurant configuration" />
+        <motion.div animate={saved ? { scale: [1, 1.05, 1] } : {}} transition={{ duration: 0.3 }}>
+          <Button
+            onClick={handleSave}
+            disabled={!dirty}
+            className={cn("gap-2", saved && "bg-emerald-600 hover:bg-emerald-700")}
           >
-            {tab.label}
-          </button>
-        ))}
-      </nav>
+            {saved ? <Check className="h-4 w-4" /> : <Save className="h-4 w-4" />}
+            {saved ? "Saved!" : "Save changes"}
+          </Button>
+        </motion.div>
+      </div>
 
-      {/* Content + sticky save */}
-      <div className="flex-1 min-w-0 flex flex-col">
-        <div className="flex-1 space-y-6 pb-24">
-        {activeTab === "general" && (
-          <GeneralSection
-            settings={settings.general}
-            onChange={(p) => { dispatch(setGeneral(p)); markDirty(); }}
-          />
-        )}
-
-        {activeTab === "categories" && (
-          <CategoriesSection />
-        )}
-
-      
-
-        {activeTab === "receipt" && (
-          <ReceiptSection
-            settings={settings.receipt}
-            onChange={(p) => { dispatch(setReceipt(p)); markDirty(); }}
-            pendingLogoFile={pendingLogoFile}
-            onLogoFileSelect={(file) => { setPendingLogoFile(file); markDirty(); }}
-          />
-        )}
-
-        {activeTab === "payment" && (
-          <PaymentSection methods={settings.paymentMethods} onToggle={(id, enabled) => { dispatch(setPaymentMethod({ id, enabled })); markDirty(); }} />
-        )}
-
-        {activeTab === "pos" && (
-          <POSSection settings={settings.pos} onChange={(p) => { dispatch(setPos(p)); markDirty(); }} />
-        )}
-        </div>
-
-        {/* Sticky save */}
-        <div className="sticky bottom-4 flex justify-end pt-4">
-          <motion.div
-            animate={saved ? { scale: [1, 1.05, 1] } : {}}
-            transition={{ duration: 0.3 }}
-          >
-            <Button
-              onClick={handleSave}
-              disabled={!dirty}
-              className={cn(saved && "bg-emerald-600 hover:bg-emerald-700")}
+      <div className="flex flex-col lg:flex-row gap-6">
+        <nav className="shrink-0 flex flex-row lg:flex-col gap-1 overflow-x-auto lg:overflow-visible pb-2 lg:pb-0 border-b lg:border-b-0 lg:border-r border-[var(--border)] lg:pr-4 lg:w-48">
+          {TABS.map((tab) => (
+            <button
+              key={tab.id}
+              type="button"
+              onClick={() => setActiveTab(tab.id)}
+              className={cn(
+                "flex items-center gap-2.5 px-3 py-2.5 rounded-lg text-sm font-medium whitespace-nowrap transition-colors text-left",
+                activeTab === tab.id
+                  ? "bg-[var(--primary)] text-[var(--primary-foreground)]"
+                  : "text-[var(--muted-foreground)] hover:bg-[var(--muted)] hover:text-[var(--foreground)]"
+              )}
             >
-              {saved ? "Saved!" : "Save changes"}
-            </Button>
-          </motion.div>
+              {tab.icon}
+              {tab.label}
+            </button>
+          ))}
+        </nav>
+
+        <div className="flex-1 min-w-0">
+          <AnimatePresence mode="wait">
+            {activeTab === "general" && (
+              <GeneralSection
+                key="general"
+                settings={settings.general}
+                onChange={(p) => { dispatch(setGeneral(p)); markDirty(); }}
+              />
+            )}
+            {activeTab === "categories" && <CategoriesSection key="categories" />}
+            {activeTab === "receipt" && (
+              <ReceiptSection
+                key="receipt"
+                settings={settings.receipt}
+                onChange={(p) => { dispatch(setReceipt(p)); markDirty(); }}
+                pendingLogoFile={pendingLogoFile}
+                onLogoFileSelect={(file) => { setPendingLogoFile(file); markDirty(); }}
+              />
+            )}
+            {activeTab === "payment" && (
+              <PaymentSection
+                key="payment"
+                methods={settings.paymentMethods}
+                onToggle={(id, enabled) => { dispatch(setPaymentMethod({ id, enabled })); markDirty(); }}
+              />
+            )}
+            {activeTab === "pos" && (
+              <POSSection
+                key="pos"
+                settings={settings.pos}
+                onChange={(p) => { dispatch(setPos(p)); markDirty(); }}
+              />
+            )}
+          </AnimatePresence>
         </div>
       </div>
-    </div>
+    </PageMotion>
+  );
+}
+
+function SectionShell({
+  title,
+  description,
+  children,
+}: {
+  title: string;
+  description: string;
+  children: React.ReactNode;
+}) {
+  return (
+    <motion.section
+      initial={{ opacity: 0, y: 8 }}
+      animate={{ opacity: 1, y: 0 }}
+      exit={{ opacity: 0, y: -8 }}
+      transition={{ duration: 0.2 }}
+      className="space-y-5"
+    >
+      <div>
+        <h2 className="text-lg font-semibold">{title}</h2>
+        <p className="text-sm text-[var(--muted-foreground)] mt-0.5">{description}</p>
+      </div>
+      {children}
+    </motion.section>
   );
 }
 
@@ -180,35 +287,29 @@ function GeneralSection({
   onChange: (p: Partial<GeneralSettings>) => void;
 }) {
   return (
-    <motion.section
-      initial={{ opacity: 0, y: 8 }}
-      animate={{ opacity: 1, y: 0 }}
-      className="space-y-4"
-    >
-      <h2 className="text-lg font-semibold">General</h2>
-      <p className="text-sm text-[var(--muted-foreground)]">Business name and currency. Changes apply after you click Save changes.</p>
-      <div className="space-y-4 max-w-md">
-        <div>
-          <label className="text-sm font-medium block mb-1">Business name</label>
-          <Input
-            value={settings.businessName}
-            onChange={(e) => onChange({ businessName: e.target.value })}
-            placeholder="e.g. My Restaurant"
-            className="bg-background"
-          />
-        </div>
-        <div>
-          <label className="text-sm font-medium block mb-1">Currency symbol</label>
-          <Input
-            value={settings.currencySymbol}
-            onChange={(e) => onChange({ currencySymbol: e.target.value })}
-            placeholder="e.g. Rs. or $"
-            className="bg-background"
-          />
-          <p className="text-xs text-[var(--muted-foreground)] mt-1">Used across POS, receipts, and reports (e.g. Rs., $, €).</p>
-        </div>
-      </div>
-    </motion.section>
+    <SectionShell title="General" description="Business identity and regional settings.">
+      <Card>
+        <CardContent className="p-5 space-y-5">
+          <div className="max-w-md">
+            <label className="text-sm font-medium block mb-1.5">Business name</label>
+            <Input
+              value={settings.businessName}
+              onChange={(e) => onChange({ businessName: e.target.value })}
+              placeholder="e.g. My Restaurant"
+            />
+          </div>
+          <div className="max-w-md">
+            <label className="text-sm font-medium block mb-1.5">Currency symbol</label>
+            <Input
+              value={settings.currencySymbol}
+              onChange={(e) => onChange({ currencySymbol: e.target.value })}
+              placeholder="e.g. Rs. or $"
+            />
+            <p className="text-xs text-[var(--muted-foreground)] mt-1.5">Used across POS, receipts, and reports (e.g. Rs., $, €).</p>
+          </div>
+        </CardContent>
+      </Card>
+    </SectionShell>
   );
 }
 
@@ -231,84 +332,90 @@ function CategoriesSection() {
       setSlug("");
       setSortOrder(categories.length);
     } catch {
-      // error toast or inline message
+      /* handled by RTK Query */
     }
   };
 
   return (
-    <motion.section
-      initial={{ opacity: 0, y: 8 }}
-      animate={{ opacity: 1, y: 0 }}
-      className="space-y-6"
-    >
-      <h2 className="text-lg font-semibold">Categories</h2>
-      <p className="text-sm text-[var(--muted-foreground)]">Add categories for your products. They will appear in the product form dropdown.</p>
-
-      <form onSubmit={handleAdd} className="flex flex-wrap items-end gap-4 p-4 rounded-lg border border-[var(--border)] bg-[var(--muted)]/20 max-w-2xl">
-        <div className="min-w-[180px]">
-          <label className="text-sm font-medium block mb-1">Name</label>
-          <Input
-            value={name}
-            onChange={(e) => setName(e.target.value)}
-            placeholder="e.g. Beverages"
-            className="bg-background"
-          />
-        </div>
-        <div className="min-w-[160px]">
-          <label className="text-sm font-medium block mb-1">Slug (optional)</label>
-          <Input
-            value={slug}
-            onChange={(e) => setSlug(e.target.value)}
-            placeholder="Auto from name"
-            className="bg-background"
-          />
-        </div>
-        <div className="w-24">
-          <label className="text-sm font-medium block mb-1">Order</label>
-          <Input
-            type="number"
-            min={0}
-            value={sortOrder}
-            onChange={(e) => setSortOrder(Number(e.target.value) || 0)}
-            className="bg-background"
-          />
-        </div>
-        <Button type="submit" disabled={!name.trim() || creating}>
-          {creating ? "Adding…" : "Add category"}
-        </Button>
-      </form>
+    <SectionShell title="Categories" description="Organize your products into categories.">
+      <Card>
+        <CardContent className="p-5">
+          <form onSubmit={handleAdd} className="flex flex-wrap items-end gap-3">
+            <div className="min-w-[180px] flex-1">
+              <label className="text-sm font-medium block mb-1.5">Name</label>
+              <Input
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+                placeholder="e.g. Beverages"
+              />
+            </div>
+            <div className="min-w-[140px]">
+              <label className="text-sm font-medium block mb-1.5">Slug (optional)</label>
+              <Input
+                value={slug}
+                onChange={(e) => setSlug(e.target.value)}
+                placeholder="Auto from name"
+              />
+            </div>
+            <div className="w-20">
+              <label className="text-sm font-medium block mb-1.5">Order</label>
+              <Input
+                type="number"
+                min={0}
+                value={sortOrder}
+                onChange={(e) => setSortOrder(Number(e.target.value) || 0)}
+              />
+            </div>
+            <Button type="submit" disabled={!name.trim() || creating} className="gap-1.5">
+              <Plus className="h-4 w-4" />
+              {creating ? "Adding…" : "Add"}
+            </Button>
+          </form>
+        </CardContent>
+      </Card>
 
       {isLoading ? (
-        <div className="h-24 rounded-lg border border-[var(--border)] animate-pulse bg-[var(--muted)]/30 max-w-2xl" />
+        <div className="space-y-2">
+          {[1, 2, 3].map((i) => (
+            <div key={i} className="h-14 rounded-lg border border-[var(--border)] animate-pulse bg-[var(--muted)]/20" />
+          ))}
+        </div>
       ) : categories.length === 0 ? (
-        <p className="text-sm text-[var(--muted-foreground)]">No categories yet. Add one above.</p>
+        <div className="rounded-xl border-2 border-dashed border-[var(--border)] py-10 text-center">
+          <FolderOpen className="h-8 w-8 mx-auto text-[var(--muted-foreground)] mb-2" />
+          <p className="text-sm font-medium">No categories yet</p>
+          <p className="text-xs text-[var(--muted-foreground)] mt-0.5">Add one above to get started.</p>
+        </div>
       ) : (
-        <ul className="space-y-2 max-w-2xl">
-          {categories.map((c) => (
-            <li
+        <div className="space-y-2">
+          {categories.map((c, i) => (
+            <div
               key={c.id}
-              className="flex items-center justify-between gap-4 py-2 px-3 rounded-lg border border-[var(--border)] bg-background"
+              className="flex items-center justify-between gap-4 rounded-lg border border-[var(--border)] bg-[var(--background)] px-4 py-3"
             >
-              <span className="font-medium">{c.name}</span>
-              <span className="text-sm text-[var(--muted-foreground)]">{c.slug}</span>
+              <div className="flex items-center gap-3 min-w-0">
+                <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-md bg-[var(--muted)] text-xs font-bold text-[var(--muted-foreground)]">
+                  {i + 1}
+                </span>
+                <span className="font-medium truncate">{c.name}</span>
+                <Badge variant="secondary" className="text-[10px] shrink-0">{c.slug}</Badge>
+              </div>
               <Button
                 type="button"
                 variant="ghost"
-                size="sm"
-                className="text-[var(--destructive)] hover:text-[var(--destructive)]"
+                size="icon"
+                className="h-8 w-8 text-[var(--muted-foreground)] hover:text-[var(--destructive)]"
                 onClick={() => deleteCategory(c.id)}
               >
-                Delete
+                <Trash2 className="h-4 w-4" />
               </Button>
-            </li>
+            </div>
           ))}
-        </ul>
+        </div>
       )}
-    </motion.section>
+    </SectionShell>
   );
 }
-
- 
 
 function ReceiptSection({
   settings,
@@ -345,89 +452,110 @@ function ReceiptSection({
   };
 
   return (
-    <motion.section
-      initial={{ opacity: 0, y: 8 }}
-      animate={{ opacity: 1, y: 0 }}
-      className="flex flex-col lg:flex-row gap-6"
-    >
-      <div className="space-y-4 flex-1 max-w-md">
-        <h2 className="text-lg font-semibold">Receipt Designer</h2>
-        <div>
-          <label className="text-sm text-[var(--muted-foreground)] block mb-1">Logo</label>
-          <label
-            htmlFor={fileInputId}
-            className="mt-1 flex h-20 cursor-pointer items-center justify-center rounded-lg border border-[var(--border)] bg-[var(--background)] text-xs text-[var(--muted-foreground)] overflow-hidden"
-          >
+    <SectionShell title="Receipt Designer" description="Customize how your printed receipts look.">
+      <div className="flex flex-col lg:flex-row gap-6">
+        <Card className="flex-1">
+          <CardContent className="p-5 space-y-5 max-w-md">
+            <div>
+              <label className="text-sm font-medium block mb-1.5">Logo</label>
+              <label
+                htmlFor={fileInputId}
+                className="flex h-24 cursor-pointer items-center justify-center gap-2 rounded-lg border-2 border-dashed border-[var(--border)] bg-[var(--muted)]/10 text-sm text-[var(--muted-foreground)] overflow-hidden transition-colors hover:border-[var(--primary)]/50 hover:bg-[var(--muted)]/20"
+              >
+                {logoDisplayUrl ? (
+                  <img src={logoDisplayUrl} alt="Logo preview" className="h-full w-full object-contain p-2" />
+                ) : (
+                  <span className="flex items-center gap-2">
+                    <Upload className="h-4 w-4" />
+                    Click to upload logo
+                  </span>
+                )}
+              </label>
+              <input
+                id={fileInputId}
+                type="file"
+                accept="image/*"
+                className="hidden"
+                onChange={handleLogoChange}
+              />
+            </div>
+            <div>
+              <label className="text-sm font-medium block mb-1.5">Header text</label>
+              <Input
+                value={settings.headerText}
+                onChange={(e) => onChange({ headerText: e.target.value })}
+                placeholder="e.g. Thank you for your order!"
+              />
+            </div>
+            <div>
+              <label className="text-sm font-medium block mb-1.5">Footer message</label>
+              <Input
+                value={settings.footerMessage}
+                onChange={(e) => onChange({ footerMessage: e.target.value })}
+                placeholder="e.g. Please come again"
+              />
+            </div>
+            <div>
+              <label className="text-sm font-medium block mb-1.5">Paper size</label>
+              <div className="flex gap-2">
+                <Button
+                  type="button"
+                  variant={is80 ? "default" : "outline"}
+                  size="sm"
+                  onClick={() => onChange({ paperSize: "80mm" })}
+                >
+                  80mm (Thermal)
+                </Button>
+                <Button
+                  type="button"
+                  variant={!is80 ? "default" : "outline"}
+                  size="sm"
+                  onClick={() => onChange({ paperSize: "a4" })}
+                >
+                  A4
+                </Button>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        <div className="shrink-0">
+          <p className="text-xs font-medium text-[var(--muted-foreground)] mb-2 text-center">Live Preview</p>
+          <div className={cn(
+            "border border-[var(--border)] rounded-lg bg-white text-black p-5 shadow-sm",
+            is80 ? "w-[280px]" : "w-[210px]"
+          )}>
             {logoDisplayUrl ? (
-              <img src={logoDisplayUrl} alt="Logo preview" className="h-full w-full object-contain" />
+              <img src={logoDisplayUrl} alt="Logo" className="h-10 mx-auto mb-3 object-contain" />
             ) : (
-              <span>Click to upload logo</span>
+              <div className="h-10 mx-auto mb-3 flex items-center justify-center text-gray-300 text-xs border border-dashed border-gray-200 rounded">
+                Logo
+              </div>
             )}
-          </label>
-          <input
-            id={fileInputId}
-            type="file"
-            accept="image/*"
-            className="hidden"
-            onChange={handleLogoChange}
-          />
-        </div>
-        <div>
-          <label className="text-sm text-[var(--muted-foreground)]">Header text</label>
-          <Input
-            value={settings.headerText}
-            onChange={(e) => onChange({ headerText: e.target.value })}
-            className="mt-1"
-          />
-        </div>
-        <div>
-          <label className="text-sm text-[var(--muted-foreground)]">Footer message</label>
-          <Input
-            value={settings.footerMessage}
-            onChange={(e) => onChange({ footerMessage: e.target.value })}
-            className="mt-1"
-          />
-        </div>
-        
-        <div>
-          <label className="text-sm text-[var(--muted-foreground)]">Paper size</label>
-          <div className="flex gap-2 mt-1">
-            <Button
-              type="button"
-              variant={is80 ? "default" : "outline"}
-              size="sm"
-              onClick={() => onChange({ paperSize: "80mm" })}
-            >
-              80mm
-            </Button>
-            <Button
-              type="button"
-              variant={!is80 ? "default" : "outline"}
-              size="sm"
-              onClick={() => onChange({ paperSize: "a4" })}
-            >
-              A4
-            </Button>
+            <p className="text-center text-sm font-medium mb-3">{settings.headerText || "Header"}</p>
+            <div className="text-xs space-y-1.5 border-t border-gray-200 pt-2.5 mt-2">
+              <div className="flex justify-between"><span>Item A x 2</span><span>Rs. 10.00</span></div>
+              <div className="flex justify-between"><span>Item B x 1</span><span>Rs. 5.00</span></div>
+            </div>
+            <div className="text-xs font-medium space-y-1 border-t border-gray-200 pt-2 mt-2">
+              <div className="flex justify-between"><span>Total</span><span>Rs. 15.00</span></div>
+            </div>
+            {settings.showQrCode && (
+              <div className="mt-3 w-14 h-14 mx-auto bg-gray-100 rounded flex items-center justify-center text-[10px] text-gray-400">QR</div>
+            )}
+            <p className="text-center text-[10px] text-gray-500 mt-3">{settings.footerMessage || "Footer"}</p>
           </div>
         </div>
       </div>
-      <div className={cn("border border-[var(--border)] rounded-lg bg-white text-black p-4 shrink-0", is80 ? "w-[280px]" : "w-[210px]")}>
-        <p className="text-xs text-center text-gray-500 mb-2">Live preview</p>
-        {logoDisplayUrl ? <img src={logoDisplayUrl} alt="Logo" className="h-10 mx-auto mb-2 object-contain" /> : <div className="h-10 mx-auto mb-2 flex items-center justify-center text-gray-400 text-xs">Logo</div>}
-        <p className="text-center text-sm font-medium mb-2">{settings.headerText || "Header"}</p>
-        <div className="text-xs space-y-1 border-t border-gray-200 pt-2 mt-2">
-          <div className="flex justify-between"><span>Item A x 2</span><span>Rs. 10.00</span></div>
-          <div className="flex justify-between"><span>Item B x 1</span><span>Rs. 5.00</span></div>
-        </div>
-        <div className="text-xs space-y-1 border-t border-gray-200 pt-2 mt-2">
-          <div className="flex justify-between"><span>Total</span><span>Rs. 15.00</span></div>
-        </div>
-        {settings.showQrCode && <div className="mt-2 w-12 h-12 mx-auto bg-gray-200 rounded flex items-center justify-center text-[10px]">QR</div>}
-        <p className="text-center text-xs mt-2">{settings.footerMessage || "Footer"}</p>
-      </div>
-    </motion.section>
+    </SectionShell>
   );
 }
+
+const PAYMENT_ICONS: Record<string, React.ReactNode> = {
+  cash: <Banknote className="h-4 w-4" />,
+  card: <CreditCard className="h-4 w-4" />,
+  mobile: <Smartphone className="h-4 w-4" />,
+};
 
 function PaymentSection({
   methods,
@@ -437,29 +565,28 @@ function PaymentSection({
   onToggle: (id: string, enabled: boolean) => void;
 }) {
   return (
-    <motion.section
-      initial={{ opacity: 0, y: 8 }}
-      animate={{ opacity: 1, y: 0 }}
-      className="space-y-4"
-    >
-      <h2 className="text-lg font-semibold">Payment Methods</h2>
-      <div className="space-y-3 max-w-md">
+    <SectionShell title="Payment Methods" description="Enable or disable accepted payment methods.">
+      <div className="space-y-2 max-w-lg">
         {methods.map((m) => (
-          <label key={m.id} className="flex items-center justify-between gap-4 p-3 rounded-lg border border-[var(--border)]">
-            <span className="font-medium">{m.name}</span>
-            <input
-              type="checkbox"
-              checked={m.enabled}
-              onChange={(e) => onToggle(m.id, e.target.checked)}
-              className="rounded border-[var(--border)]"
-            />
-          </label>
+          <SettingRow
+            key={m.id}
+            label={m.name}
+            description={m.enabled ? "Accepted at checkout" : "Disabled"}
+            icon={PAYMENT_ICONS[m.id]}
+          >
+            <Toggle checked={m.enabled} onChange={(val) => onToggle(m.id, val)} />
+          </SettingRow>
         ))}
-    
       </div>
-    </motion.section>
+    </SectionShell>
   );
 }
+
+const ORDER_TYPE_ICONS: Record<string, React.ReactNode> = {
+  "dine-in": <UtensilsCrossed className="h-4 w-4" />,
+  takeaway: <ShoppingBag className="h-4 w-4" />,
+  delivery: <Truck className="h-4 w-4" />,
+};
 
 function POSSection({
   settings,
@@ -469,31 +596,36 @@ function POSSection({
   onChange: (p: Partial<POSPreferences>) => void;
 }) {
   return (
-    <motion.section
-      initial={{ opacity: 0, y: 8 }}
-      animate={{ opacity: 1, y: 0 }}
-      className="space-y-4"
-    >
-      <h2 className="text-lg font-semibold">POS Preferences</h2>
-      <div className="space-y-4 max-w-md">
-        <div>
-          <label className="text-sm text-[var(--muted-foreground)]">Default order type</label>
-          <select
-            value={settings.defaultOrderType}
-            onChange={(e) => onChange({ defaultOrderType: e.target.value as POSPreferences["defaultOrderType"] })}
-            className="mt-1 w-full rounded-lg border border-[var(--border)] bg-[var(--background)] px-3 py-2 text-sm"
-          >
-            <option value="dine-in">Dine-in</option>
-            <option value="takeaway">Takeaway</option>
-            <option value="delivery">Delivery</option>
-          </select>
+    <SectionShell title="POS Preferences" description="Configure the point-of-sale experience.">
+      <div className="space-y-2 max-w-lg">
+        <div className="rounded-lg border border-[var(--border)] bg-[var(--background)] px-4 py-3.5">
+          <label className="text-sm font-medium block mb-2">Default order type</label>
+          <div className="flex gap-2">
+            {(["dine-in", "takeaway", "delivery"] as const).map((type) => (
+              <Button
+                key={type}
+                type="button"
+                variant={settings.defaultOrderType === type ? "default" : "outline"}
+                size="sm"
+                className="gap-1.5"
+                onClick={() => onChange({ defaultOrderType: type })}
+              >
+                {ORDER_TYPE_ICONS[type]}
+                {type === "dine-in" ? "Dine-in" : type.charAt(0).toUpperCase() + type.slice(1)}
+              </Button>
+            ))}
+          </div>
         </div>
-        <label className="flex items-center justify-between gap-4 p-3 rounded-lg border border-[var(--border)]">
-          <span className="text-sm">Auto print receipt</span>
-          <input type="checkbox" checked={settings.autoPrintReceipt} onChange={(e) => onChange({ autoPrintReceipt: e.target.checked })} className="rounded border-[var(--border)]" />
-        </label>
-      
+        <SettingRow label="Auto print receipt" description="Print receipt automatically after each order" icon={<Printer className="h-4 w-4" />}>
+          <Toggle checked={settings.autoPrintReceipt} onChange={(val) => onChange({ autoPrintReceipt: val })} />
+        </SettingRow>
+        <SettingRow label="Sound on new order" description="Play a notification sound for incoming orders" icon={<Volume2 className="h-4 w-4" />}>
+          <Toggle checked={settings.soundOnNewOrder} onChange={(val) => onChange({ soundOnNewOrder: val })} />
+        </SettingRow>
+        <SettingRow label="Kitchen auto-accept" description="Automatically move new orders to preparing" icon={<ChefHat className="h-4 w-4" />}>
+          <Toggle checked={settings.kitchenAutoAccept} onChange={(val) => onChange({ kitchenAutoAccept: val })} />
+        </SettingRow>
       </div>
-    </motion.section>
+    </SectionShell>
   );
 }

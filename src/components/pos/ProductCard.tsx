@@ -1,25 +1,38 @@
 "use client";
 
 import { motion } from "framer-motion";
-import { formatCurrency } from "@/lib/utils";
-import type { Product } from "@/types/api/index";
+import { cn, formatCurrency } from "@/lib/utils";
+import { Badge } from "@/components/ui/badge";
+import { Package } from "lucide-react";
+import type { Product, InventoryItem } from "@/types/api/index";
 
 interface ProductCardProps {
   product: Product;
   onAdd: (product: Product) => void;
+  stock?: InventoryItem;
 }
 
-export function ProductCard({ product, onAdd }: ProductCardProps) {
+export function ProductCard({ product, onAdd, stock }: ProductCardProps) {
+  const isOut = stock && stock.currentStock <= 0;
+  const isLow =
+    stock &&
+    !isOut &&
+    stock.currentStock <= (stock.lowStockThreshold ?? 10);
+  const modifierCount = product.modifiers?.length ?? 0;
+
   return (
     <motion.button
       type="button"
       whileTap={{ scale: 0.98 }}
       transition={{ duration: 0.12 }}
-      className="pos-touch pos-touch-area w-full text-left rounded-xl border border-[var(--border)] bg-[var(--background)] shadow-[var(--shadow-sm)] overflow-hidden min-h-[112px] flex flex-col select-none outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent)] focus-visible:ring-offset-2 hover:border-[var(--accent)]/40 hover:shadow-md active:shadow-sm transition-all duration-200"
-      onClick={() => onAdd(product)}
+      disabled={!!isOut}
+      className={cn(
+        "pos-touch pos-touch-area w-full text-left rounded-xl border border-[var(--border)] bg-[var(--background)] shadow-[var(--shadow-sm)] overflow-hidden min-h-[112px] flex flex-col select-none outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent)] focus-visible:ring-offset-2 hover:border-[var(--accent)]/40 hover:shadow-md active:shadow-sm transition-all duration-200",
+        isOut && "opacity-50 cursor-not-allowed hover:shadow-[var(--shadow-sm)] hover:border-[var(--border)]"
+      )}
+      onClick={() => !isOut && onAdd(product)}
     >
-      {/* Image or placeholder */}
-      <div className="relative h-16 w-full bg-[var(--muted)]/60 shrink-0">
+      <div className="relative h-20 w-full bg-[var(--muted)]/60 shrink-0">
         {product.image ? (
           <img
             src={product.image}
@@ -28,14 +41,27 @@ export function ProductCard({ product, onAdd }: ProductCardProps) {
           />
         ) : (
           <div className="absolute inset-0 flex items-center justify-center text-[var(--muted-foreground)]/50">
-            <svg className="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.2}>
-              <path strokeLinecap="round" strokeLinejoin="round" d="M12 6.042A8.967 8.967 0 006 3.75c-1.052 0-2.062.18-3 .512v14.25A8.987 8.987 0 016 18c2.305 0 4.408.867 6 2.292m0-14.25a8.966 8.966 0 016-2.292c1.052 0 2.062.18 3 .512v14.25A8.987 8.987 0 0018 18a8.967 8.967 0 00-6 2.292m0-14.25v14.25" />
-            </svg>
+            <Package className="h-8 w-8" />
           </div>
+        )}
+        {isOut && (
+          <Badge
+            variant="destructive"
+            className="absolute top-1.5 right-1.5 text-[10px] px-1.5 py-0 h-4"
+          >
+            Out of stock
+          </Badge>
+        )}
+        {isLow && (
+          <Badge
+            variant="warning"
+            className="absolute top-1.5 right-1.5 text-[10px] px-1.5 py-0 h-4"
+          >
+            {stock!.currentStock} left
+          </Badge>
         )}
       </div>
 
-      {/* Content */}
       <div className="flex flex-1 flex-col justify-between p-3">
         <p className="font-semibold text-sm text-[var(--foreground)] leading-tight line-clamp-2">
           {product.name}
@@ -44,7 +70,11 @@ export function ProductCard({ product, onAdd }: ProductCardProps) {
           <span className="text-base font-bold text-[var(--accent)] tabular-nums">
             {formatCurrency(product.price)}
           </span>
-           
+          {modifierCount > 0 && (
+            <span className="text-[11px] text-[var(--muted-foreground)]">
+              +{modifierCount} opt
+            </span>
+          )}
         </div>
       </div>
     </motion.button>

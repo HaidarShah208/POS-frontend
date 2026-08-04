@@ -4,13 +4,21 @@ import { useState, useEffect, useRef, useMemo } from "react";
 import Link from "next/link";
 import { motion, AnimatePresence } from "framer-motion";
 import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
 import { KDSOrderCard } from "@/components/kitchen/KDSOrderCard";
 import { useGetKitchenOrdersQuery, useUpdateKitchenOrderStatusMutation } from "@/redux/api/ordersEndpoints";
 import { useGetBranchesQuery } from "@/redux/api/branchesEndpoints";
 import type { Order, KitchenOrderStatus } from "@/types/api/index";
 import type { KitchenOrder } from "@/types/api";
 import { cn } from "@/lib/utils";
-import { ArrowLeft } from "lucide-react";
+import {
+  ArrowLeft,
+  ChefHat,
+  ClipboardList,
+  Flame,
+  CheckCircle2,
+  Clock,
+} from "lucide-react";
 
 type Filter = "ALL" | "NEW" | "PREPARING" | "READY";
 
@@ -31,12 +39,28 @@ function toKitchenOrderDisplay(order: Order): KitchenOrder {
   };
 }
 
-const FILTER_LABELS: Record<Filter, string> = {
-  ALL: "All",
-  NEW: "New",
-  PREPARING: "Preparing",
-  READY: "Ready",
-};
+const FILTERS: { id: Filter; label: string; icon: React.ReactNode; color: string }[] = [
+  { id: "ALL", label: "All Orders", icon: <ClipboardList className="h-4 w-4" />, color: "" },
+  { id: "NEW", label: "New", icon: <Flame className="h-4 w-4" />, color: "text-amber-500" },
+  { id: "PREPARING", label: "Preparing", icon: <ChefHat className="h-4 w-4" />, color: "text-blue-500" },
+  { id: "READY", label: "Ready", icon: <CheckCircle2 className="h-4 w-4" />, color: "text-emerald-500" },
+];
+
+function LiveClock() {
+  const [time, setTime] = useState(() => new Date());
+  useEffect(() => {
+    const id = setInterval(() => setTime(new Date()), 1000);
+    return () => clearInterval(id);
+  }, []);
+  return (
+    <div className="flex items-center gap-2 text-sm text-[var(--muted-foreground)]">
+      <Clock className="h-4 w-4" />
+      <span className="tabular-nums font-medium">
+        {time.toLocaleTimeString("en-US", { hour: "2-digit", minute: "2-digit", second: "2-digit" })}
+      </span>
+    </div>
+  );
+}
 
 export default function KitchenPage() {
   const { data: branches = [] } = useGetBranchesQuery();
@@ -54,6 +78,7 @@ export default function KitchenPage() {
 
   const counts = useMemo(
     () => ({
+      ALL: displayOrders.length,
       NEW: displayOrders.filter((o) => o.status === "NEW").length,
       PREPARING: displayOrders.filter((o) => o.status === "PREPARING").length,
       READY: displayOrders.filter((o) => o.status === "READY").length,
@@ -75,53 +100,83 @@ export default function KitchenPage() {
 
   return (
     <div className="flex h-screen flex-col bg-[var(--background)]">
-      <header className="shrink-0 border-b border-[var(--border)] bg-[var(--card)] shadow-sm">
-        <div className="mx-auto flex md:flex-row flex-col items-center justify-between gap-4 px-4 py-4 sm:px-6">
-          <div className="flex items-center ">
-            <Button variant="ghost" size="sm" asChild className="text-[var(--muted-foreground)] hover:text-[var(--foreground)]">
-              <Link href="/dashboard"><ArrowLeft className='w-8 h-6'/> </Link>
-            </Button>
+      <header className="shrink-0 border-b border-[var(--border)] bg-[var(--card)]">
+        <div className="flex flex-col gap-3 px-4 py-3 sm:px-6">
+          <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
-              <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-[var(--accent)]/15 text-[var(--accent)]">
-                <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
-                </svg>
-              </div>
-              <div>
-                <h1 className="text-lg font-semibold tracking-tight text-[var(--foreground)]">Kitchen Display</h1>
-                <p className="text-xs text-[var(--muted-foreground)]">
-                  {filtered.length} order{filtered.length !== 1 ? "s" : ""} in view
-                </p>
+              <Button variant="ghost" size="icon" asChild className="h-9 w-9 text-[var(--muted-foreground)] hover:text-[var(--foreground)]">
+                <Link href="/dashboard"><ArrowLeft className="h-5 w-5" /></Link>
+              </Button>
+              <div className="flex items-center gap-3">
+                <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-[var(--primary)] text-[var(--primary-foreground)]">
+                  <ChefHat className="h-5 w-5" />
+                </div>
+                <div>
+                  <h1 className="text-lg font-bold tracking-tight">Kitchen Display</h1>
+                  <p className="text-xs text-[var(--muted-foreground)]">
+                    {displayOrders.length} active order{displayOrders.length !== 1 ? "s" : ""}
+                  </p>
+                </div>
               </div>
             </div>
+            <LiveClock />
           </div>
-          <nav className="flex items-center gap-1 rounded-lg bg-[var(--muted)]/50 p-1">
-            {(["ALL", "NEW", "PREPARING", "READY"] as const).map((f) => (
-              <button
-                key={f}
-                type="button"
-                onClick={() => setFilter(f)}
-                className={cn(
-                  "relative rounded-md px-4 py-2.5 text-sm font-medium transition-colors pos-touch h-[20px] md:min-h-[40px]",
-                  filter === f
-                    ? "bg-[var(--background)] text-[var(--foreground)] shadow-sm"
-                    : "text-[var(--muted-foreground)] hover:text-[var(--foreground)]"
-                )}
-              >
-                {FILTER_LABELS[f]}
-                {f !== "ALL" && counts[f] > 0 && (
-                  <span
-                    className={cn(
-                      "ml-1.5 inline-flex h-5 min-w-[20px] items-center justify-center rounded-full px-1.5 text-xs font-semibold",
-                      filter === f ? "bg-[var(--accent)]/20 text-[var(--accent)]" : "bg-[var(--muted)] text-[var(--muted-foreground)]"
-                    )}
-                  >
-                    {counts[f]}
+
+          <div className="flex items-center gap-4 overflow-x-auto pb-0.5">
+            <nav className="flex items-center gap-1 rounded-xl bg-[var(--muted)]/50 p-1">
+              {FILTERS.map((f) => (
+                <button
+                  key={f.id}
+                  type="button"
+                  onClick={() => setFilter(f.id)}
+                  className={cn(
+                    "relative flex items-center gap-1.5 rounded-lg px-3.5 py-2 text-sm font-medium transition-all",
+                    filter === f.id
+                      ? "bg-[var(--background)] text-[var(--foreground)] shadow-sm"
+                      : "text-[var(--muted-foreground)] hover:text-[var(--foreground)]"
+                  )}
+                >
+                  <span className={cn(filter === f.id && f.color)}>{f.icon}</span>
+                  <span className="hidden sm:inline">{f.label}</span>
+                  {counts[f.id] > 0 && (
+                    <Badge
+                      variant={filter === f.id ? "default" : "secondary"}
+                      className={cn(
+                        "ml-0.5 h-5 min-w-5 px-1.5 text-[10px]",
+                        f.id === "NEW" && counts.NEW > 0 && filter !== f.id && "bg-amber-100 text-amber-700"
+                      )}
+                    >
+                      {counts[f.id]}
+                    </Badge>
+                  )}
+                </button>
+              ))}
+            </nav>
+
+            <div className="ml-auto hidden items-center gap-3 md:flex">
+              {counts.NEW > 0 && (
+                <div className="flex items-center gap-1.5 rounded-full bg-amber-100 px-3 py-1 text-xs font-medium text-amber-700">
+                  <span className="relative flex h-2 w-2">
+                    <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-amber-500 opacity-75" />
+                    <span className="relative inline-flex h-2 w-2 rounded-full bg-amber-500" />
                   </span>
-                )}
-              </button>
-            ))}
-          </nav>
+                  {counts.NEW} new
+                </div>
+              )}
+              {counts.PREPARING > 0 && (
+                <div className="flex items-center gap-1.5 rounded-full bg-blue-100 px-3 py-1 text-xs font-medium text-blue-700">
+                  <ChefHat className="h-3 w-3" />
+                  {counts.PREPARING} cooking
+                </div>
+              )}
+              {counts.READY > 0 && (
+                <div className="flex items-center gap-1.5 rounded-full bg-emerald-100 px-3 py-1 text-xs font-medium text-emerald-700">
+                  <CheckCircle2 className="h-3 w-3" />
+                  {counts.READY} ready
+                </div>
+              )}
+            </div>
+          </div>
         </div>
       </header>
 
@@ -129,7 +184,7 @@ export default function KitchenPage() {
         ref={listRef}
         className={cn(
           "flex-1 overflow-y-auto p-4 sm:p-6",
-          "grid gap-4 sm:gap-5 items-start",
+          "grid gap-4 sm:gap-5 items-start auto-rows-min",
           "grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5"
         )}
       >
@@ -138,15 +193,17 @@ export default function KitchenPage() {
             <motion.div
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
-              className="col-span-full flex flex-col items-center justify-center rounded-2xl border-2 border-dashed border-[var(--border)] bg-[var(--muted)]/20 py-16 text-center"
+              className="col-span-full flex flex-col items-center justify-center rounded-2xl border-2 border-dashed border-[var(--border)] bg-[var(--muted)]/10 py-20 text-center"
             >
               <div className="mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-[var(--muted)]/50 text-[var(--muted-foreground)]">
-                <svg className="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
-                </svg>
+                <ClipboardList className="h-8 w-8" />
               </div>
-              <p className="text-sm font-medium text-[var(--foreground)]">No orders in this view</p>
-              <p className="mt-1 text-sm text-[var(--muted-foreground)]">Place orders from POS to see them here.</p>
+              <p className="text-base font-semibold">No orders in this view</p>
+              <p className="mt-1.5 text-sm text-[var(--muted-foreground)] max-w-xs">
+                {filter === "ALL"
+                  ? "Place orders from POS to see them here."
+                  : `No ${FILTERS.find((f) => f.id === filter)?.label.toLowerCase()} orders right now.`}
+              </p>
             </motion.div>
           ) : (
             filtered.map((order) => (
