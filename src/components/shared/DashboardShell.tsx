@@ -15,6 +15,7 @@ import {
 } from "@/components/ui/drawer";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
+import { AlertTriangle } from "lucide-react";
 
 const SIDEBAR_STORAGE_KEY = "pos-sidebar-collapsed";
 
@@ -32,6 +33,7 @@ export function DashboardShell({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const user = useAppSelector((s) => s.auth?.user);
   const rehydrated = useAppSelector((s) => s.auth?._rehydrated);
+  const subscription = useAppSelector((s) => s.auth?.subscription);
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [collapsed, setCollapsed] = useState(false);
 
@@ -96,6 +98,15 @@ export function DashboardShell({ children }: { children: React.ReactNode }) {
       </Drawer>
 
       <div className="flex flex-1 flex-col min-w-0 overflow-hidden">
+        {subscription?.status === "trialing" && subscription?.trialEndsAt && (
+          <div className="flex items-center gap-2 px-4 py-2 bg-amber-50 border-b border-amber-200 text-amber-800 text-sm">
+            <AlertTriangle className="w-4 h-4 shrink-0" />
+            <span>
+              Trial ends {new Date(subscription.trialEndsAt).toLocaleDateString()}.
+              Upgrade your plan to continue using all features.
+            </span>
+          </div>
+        )}
         <OfflineBanner />
         <Topbar
           onMenuClick={() => setSidebarOpen(true)}

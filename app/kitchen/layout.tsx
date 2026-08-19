@@ -4,7 +4,7 @@ import { useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useAppSelector } from "@/hooks/redux";
 
-export default function POSLayout({
+export default function KitchenLayout({
   children,
 }: {
   children: React.ReactNode;
@@ -22,15 +22,11 @@ export default function POSLayout({
 
   if (!rehydrated || !user) {
     return (
-      <div className="flex h-screen items-center justify-center bg-[var(--muted)]/50">
-        <div className="animate-pulse text-[var(--text-secondary)]">Loading...</div>
+      <div className="flex h-screen items-center justify-center bg-gray-950">
+        <div className="animate-pulse text-gray-400">Loading Kitchen...</div>
       </div>
     );
   }
 
-  return (
-    <div className="flex h-screen overflow-hidden bg-[var(--muted)]/50">
-      {children}
-    </div>
-  );
+  return <>{children}</>;
 }

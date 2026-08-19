@@ -8,8 +8,8 @@ import "./api/ordersEndpoints";
 import "./api/branchesEndpoints";
 import "./api/customersEndpoints";
 import "./api/suppliersEndpoints";
+import "./api/adminEndpoints";
 import { cartApi } from "./api/cart";
-import { reportsApi } from "./api/reports/reportsApi";
 import { authReducer } from "./api/auth";
 import { settingsReducer } from "./slices/settingsSlice";
 import { floorReducer } from "./slices/floorSlice";
@@ -33,13 +33,11 @@ export const store = configureStore({
     notifications: notificationReducer,
     [baseApi.reducerPath]: baseApi.reducer,
     [cartApi.reducerPath]: cartApi.reducer,
-    [reportsApi.reducerPath]: reportsApi.reducer,
   },
   middleware: (getDefaultMiddleware) =>
     getDefaultMiddleware().concat(
       baseApi.middleware,
       cartApi.middleware,
-      reportsApi.middleware
     ),
   devTools: process.env.NODE_ENV !== "production",
 });

@@ -2,6 +2,7 @@
 
 import dynamic from "next/dynamic";
 import { PageLoader } from "@/components/shared/PageLoader";
+import { RoleGuard } from "@/components/auth/RoleGuard";
 
 const ProductsView = dynamic(
   () => import("@/features/products/ProductsView").then((m) => ({ default: m.ProductsView })),
@@ -9,5 +10,9 @@ const ProductsView = dynamic(
 );
 
 export default function ProductsPage() {
-  return <ProductsView />;
+  return (
+    <RoleGuard permission="products">
+      <ProductsView />
+    </RoleGuard>
+  );
 }

@@ -5,6 +5,7 @@ export {
   setRole,
   logout,
   setRehydrated,
+  setSubscription,
   loadStoredAuth,
   saveAuthToStorage,
 } from "./authSlice";

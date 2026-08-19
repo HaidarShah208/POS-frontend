@@ -28,12 +28,6 @@ async function baseQueryWithAuth(
   api: Parameters<typeof rawBaseQuery>[1],
   extra: Parameters<typeof rawBaseQuery>[2]
 ) {
-  if (!BACKEND_ORIGIN && typeof window !== "undefined") {
-    // When BACKEND_ORIGIN isn't available at build-time, requests fall back to `/api/*`.
-    // Ensure the Next.js API proxy route exists in production deployments.
-    // eslint-disable-next-line no-console
-    console.warn("[api] NEXT_PUBLIC_API_URL is missing; using /api proxy on same origin.");
-  }
   const result = await rawBaseQuery(args, api, extra);
   if (result.error?.status === 401) {
     api.dispatch(logout());
@@ -56,6 +50,8 @@ export const baseApi = createApi({
     "Customers",
     "Reports",
     "Suppliers",
+    "Organizations",
+    "PlatformStats",
   ],
   refetchOnFocus: false,
   refetchOnReconnect: true,

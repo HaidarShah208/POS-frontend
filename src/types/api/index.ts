@@ -2,7 +2,7 @@
  * API types — align with backend DTOs and responses.
  */
 
-export type UserRole = "admin" | "cashier" | "kitchen";
+export type UserRole = "super_admin" | "owner" | "admin" | "cashier" | "kitchen";
 
 export interface User {
   id: string;
@@ -10,6 +10,7 @@ export interface User {
   name: string;
   role: UserRole;
   branchId?: string;
+  organizationId?: string | null;
 }
 
 export interface Branch {
@@ -170,6 +171,50 @@ export interface GetCustomersParams {
 export interface AuthResponse {
   user: User;
   token: string;
+  subscription?: {
+    status: string;
+    planSlug: string;
+    trialEndsAt: string | null;
+  };
+}
+
+export interface Organization {
+  id: string;
+  name: string;
+  slug: string;
+  logo?: string | null;
+  phone?: string | null;
+  email?: string | null;
+  address?: string | null;
+  status: "active" | "suspended" | "trial" | "inactive";
+  createdAt: string;
+  updatedAt: string;
+  userCount?: number;
+  subscription?: {
+    id: string;
+    status: string;
+    plan?: { name: string; slug: string };
+    trialEndsAt?: string | null;
+  };
+}
+
+export interface PlatformStats {
+  totalOrganizations: number;
+  activeOrganizations: number;
+  trialOrganizations: number;
+  suspendedOrganizations: number;
+  totalUsers: number;
+  totalOrders: number;
+  totalRevenue: number;
+}
+
+export interface RegisterOrgInput {
+  restaurantName: string;
+  ownerName: string;
+  email: string;
+  password: string;
+  phone?: string;
+  address?: string;
 }
 
 export interface PaginatedResponse<T> {

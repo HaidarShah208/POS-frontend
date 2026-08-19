@@ -32,6 +32,7 @@ export const suppliersEndpoints = baseApi.injectEndpoints({
       query: (supplierId) => `/suppliers/${supplierId}/purchases`,
       transformResponse: (res: SupplierPurchase[] | { data: SupplierPurchase[] }) =>
         Array.isArray(res) ? res : res.data,
+      providesTags: (_r, _e, supplierId) => [{ type: "Suppliers", id: `purchases-${supplierId}` }],
     }),
   }),
 });

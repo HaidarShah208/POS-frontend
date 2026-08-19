@@ -32,6 +32,7 @@ export const customersEndpoints = baseApi.injectEndpoints({
       query: (customerId) => `/customers/${customerId}/orders`,
       transformResponse: (res: CustomerOrder[] | { data: CustomerOrder[] }) =>
         Array.isArray(res) ? res : res.data,
+      providesTags: (_r, _e, customerId) => [{ type: "Orders", id: `customer-${customerId}` }],
     }),
   }),
 });

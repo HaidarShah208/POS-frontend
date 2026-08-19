@@ -4,12 +4,25 @@ import { useForm } from "react-hook-form";
 import { useRouter } from "next/navigation";
 import { useDispatch } from "react-redux";
 import { toast } from "sonner";
+import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { setCredentials, saveAuthToStorage } from "@/redux/api/auth";
 import { useLoginMutation } from "@/redux/api/authEndpoints";
+import type { UserRole } from "@/types/admin";
 
 type LoginFormValues = { email: string; password: string };
+
+function getRedirectForRole(role: UserRole): string {
+  switch (role) {
+    case "super_admin":
+      return "/admin";
+    case "kitchen":
+      return "/kitchen";
+    default:
+      return "/dashboard";
+  }
+}
 
 export function LoginForm() {
   const router = useRouter();
@@ -20,10 +33,18 @@ export function LoginForm() {
   const onSubmit = async (data: LoginFormValues) => {
     try {
       const result = await login({ email: data.email, password: data.password }).unwrap();
-      const payload = { user: result.user, token: result.token };
+      const payload = {
+        user: {
+          ...result.user,
+          organizationId: result.user.organizationId,
+        },
+        token: result.token,
+        subscription: result.subscription || null,
+      };
       dispatch(setCredentials(payload));
       saveAuthToStorage(payload);
-      router.push("/dashboard");
+      const redirect = getRedirectForRole(result.user.role as UserRole);
+      router.push(redirect);
     } catch {
       setError("root", { message: "Invalid email or password." });
       toast.error("Invalid email or password.");
@@ -53,7 +74,6 @@ export function LoginForm() {
           )}
         </div>
         <div className="space-y-1">
-         
           <Input
             id="password"
             type="password"
@@ -75,7 +95,12 @@ export function LoginForm() {
         </Button>
       </form>
 
-      
+      <p className="text-center text-sm text-muted-foreground">
+        Don&apos;t have an account?{" "}
+        <Link href="/auth/register" className="text-foreground font-medium hover:underline">
+          Register your restaurant
+        </Link>
+      </p>
     </div>
   );
 }
