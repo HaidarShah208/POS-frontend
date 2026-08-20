@@ -2,7 +2,7 @@
  * API types — align with backend DTOs and responses.
  */
 
-export type UserRole = "super_admin" | "owner" | "admin" | "cashier" | "kitchen";
+export type UserRole = "super_admin" | "owner" | "admin" | "cashier" | "kitchen" | (string & {});
 
 export interface User {
   id: string;
@@ -11,6 +11,8 @@ export interface User {
   role: UserRole;
   branchId?: string;
   organizationId?: string | null;
+  createdAt?: string;
+  updatedAt?: string;
 }
 
 export interface Branch {
@@ -171,11 +173,36 @@ export interface GetCustomersParams {
 export interface AuthResponse {
   user: User;
   token: string;
+  permissions: string[];
   subscription?: {
     status: string;
     planSlug: string;
     trialEndsAt: string | null;
   };
+}
+
+export interface RoleDefinition {
+  id: string;
+  organizationId: string | null;
+  name: string;
+  slug: string;
+  description: string | null;
+  permissions: string[];
+  isSystem: boolean;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface CreateRoleInput {
+  name: string;
+  description?: string;
+  permissions: string[];
+}
+
+export interface UpdateRoleInput {
+  name?: string;
+  description?: string;
+  permissions?: string[];
 }
 
 export interface Organization {

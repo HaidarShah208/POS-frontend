@@ -69,10 +69,11 @@ export function CommandPalette() {
   const listRef = useRef<HTMLDivElement>(null);
   const router = useRouter();
   const user = useAppSelector((s) => s.auth?.user);
+  const permissions = useAppSelector((s) => s.auth?.permissions);
 
   const commands: CommandItem[] = useMemo(() => {
     if (!user) return [];
-    const navItems = getNavItemsForRole(user.role);
+    const navItems = getNavItemsForRole(user.role, permissions);
     return navItems.map((item) => ({
       id: item.href,
       label: item.label,

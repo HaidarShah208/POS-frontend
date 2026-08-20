@@ -70,6 +70,7 @@ export default function RegisterPage() {
           organizationId: result.user.organizationId,
         },
         token: result.token,
+        permissions: result.permissions ?? [],
         subscription: result.subscription || null,
       };
       dispatch(setCredentials(authPayload));

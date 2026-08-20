@@ -52,6 +52,8 @@ export const baseApi = createApi({
     "Suppliers",
     "Organizations",
     "PlatformStats",
+    "Roles",
+    "Users",
   ],
   refetchOnFocus: false,
   refetchOnReconnect: true,

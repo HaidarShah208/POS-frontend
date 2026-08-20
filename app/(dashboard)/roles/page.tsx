@@ -6,34 +6,47 @@ import { PageMotion } from "@/components/shared/PageMotion";
 import { StatsCard } from "@/components/admin/StatsCard";
 import { EmptyState } from "@/components/admin/EmptyState";
 import { RoleGuard } from "@/components/auth/RoleGuard";
-import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import {
   Drawer, DrawerContent, DrawerHeader, DrawerTitle, DrawerClose,
 } from "@/components/ui/drawer";
-import { useAppSelector, useAppDispatch } from "@/hooks/redux";
-import { addCustomRole, updateCustomRole, deleteCustomRole } from "@/redux/slices/rolesSlice";
-import { ALL_PERMISSIONS, SYSTEM_ROLES, type Permission } from "@/lib/permissions";
+import {
+  useGetRolesQuery,
+  useCreateRoleMutation,
+  useUpdateRoleMutation,
+  useDeleteRoleMutation,
+} from "@/redux/api/rolesEndpoints";
+import { ALL_PERMISSIONS, type Permission } from "@/lib/permissions";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
-import type { RoleDefinition } from "@/types/roles";
+import type { RoleDefinition } from "@/types/api/index";
 import {
   Shield, Plus, X, Save, Trash2, Lock, ChevronRight,
-  Users, Check, ShieldCheck, ShieldAlert,
+  Users, Check, ShieldCheck, Loader2,
 } from "lucide-react";
 
 const PERM_GROUPS = [...new Set(ALL_PERMISSIONS.map((p) => p.group))];
 
-function RoleFormDrawer({ open, onClose, role }: { open: boolean; onClose: () => void; role?: RoleDefinition }) {
-  const dispatch = useAppDispatch();
+function RoleFormDrawer({
+  open,
+  onClose,
+  role,
+}: {
+  open: boolean;
+  onClose: () => void;
+  role?: RoleDefinition;
+}) {
+  const [createRole, { isLoading: creating }] = useCreateRoleMutation();
+  const [updateRole, { isLoading: updating }] = useUpdateRoleMutation();
   const [name, setName] = useState(role?.name ?? "");
   const [description, setDescription] = useState(role?.description ?? "");
-  const [perms, setPerms] = useState<Set<Permission>>(new Set(role?.permissions ?? []));
+  const [perms, setPerms] = useState<Set<string>>(new Set(role?.permissions ?? []));
   const isEdit = !!role;
+  const isSaving = creating || updating;
 
-  const togglePerm = (p: Permission) => {
+  const togglePerm = (p: string) => {
     const next = new Set(perms);
     if (next.has(p)) next.delete(p); else next.add(p);
     setPerms(next);
@@ -47,18 +60,23 @@ function RoleFormDrawer({ open, onClose, role }: { open: boolean; onClose: () =>
     setPerms(next);
   };
 
-  const handleSubmit = () => {
+  const handleSubmit = async () => {
     if (!name.trim()) { toast.error("Role name is required"); return; }
     if (perms.size === 0) { toast.error("Select at least one permission"); return; }
     const permArr = Array.from(perms);
-    if (isEdit) {
-      dispatch(updateCustomRole({ id: role.id, name: name.trim(), description: description.trim(), permissions: permArr }));
-      toast.success("Role updated");
-    } else {
-      dispatch(addCustomRole({ name: name.trim(), description: description.trim(), permissions: permArr }));
-      toast.success("Role created");
+    try {
+      if (isEdit) {
+        await updateRole({ id: role.id, name: name.trim(), description: description.trim(), permissions: permArr }).unwrap();
+        toast.success("Role updated");
+      } else {
+        await createRole({ name: name.trim(), description: description.trim(), permissions: permArr }).unwrap();
+        toast.success("Role created");
+      }
+      onClose();
+    } catch (err) {
+      const apiErr = err as { data?: { error?: string } };
+      toast.error(apiErr?.data?.error || "Failed to save role");
     }
-    onClose();
   };
 
   return (
@@ -125,7 +143,10 @@ function RoleFormDrawer({ open, onClose, role }: { open: boolean; onClose: () =>
         </div>
         <div className="shrink-0 border-t border-[var(--border)] px-6 py-4 flex justify-end gap-2">
           <Button variant="outline" onClick={onClose}>Cancel</Button>
-          <Button onClick={handleSubmit} className="gap-1.5"><Save className="h-4 w-4" />{isEdit ? "Update" : "Create"}</Button>
+          <Button onClick={handleSubmit} disabled={isSaving} className="gap-1.5">
+            {isSaving ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />}
+            {isEdit ? "Update" : "Create"}
+          </Button>
         </div>
       </DrawerContent>
     </Drawer>
@@ -133,23 +154,33 @@ function RoleFormDrawer({ open, onClose, role }: { open: boolean; onClose: () =>
 }
 
 export default function RolesPage() {
-  const dispatch = useAppDispatch();
-  const { customRoles } = useAppSelector((s) => s.roles);
+  const { data: roles = [], isLoading } = useGetRolesQuery();
+  const [deleteRole] = useDeleteRoleMutation();
   const [formOpen, setFormOpen] = useState(false);
   const [editRole, setEditRole] = useState<RoleDefinition | undefined>();
   const [expandedId, setExpandedId] = useState<string | null>(null);
 
-  const allRoles: (RoleDefinition & { isSystem: boolean })[] = useMemo(() => [
-    ...SYSTEM_ROLES.map((r) => ({
-      id: r.id,
-      name: r.label,
-      description: r.description,
-      permissions: r.permissions,
-      isSystem: true,
-      createdAt: "",
-    })),
-    ...customRoles,
-  ], [customRoles]);
+  const systemRoles = useMemo(() => roles.filter((r) => r.isSystem), [roles]);
+  const customRoles = useMemo(() => roles.filter((r) => !r.isSystem), [roles]);
+
+  const handleDelete = async (id: string) => {
+    try {
+      await deleteRole(id).unwrap();
+      toast.success("Role deleted");
+      setExpandedId(null);
+    } catch (err) {
+      const apiErr = err as { data?: { error?: string } };
+      toast.error(apiErr?.data?.error || "Failed to delete role");
+    }
+  };
+
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center min-h-[50vh]">
+        <Loader2 className="h-8 w-8 animate-spin text-[var(--muted-foreground)]" />
+      </div>
+    );
+  }
 
   return (
     <RoleGuard permission="roles">
@@ -165,7 +196,7 @@ export default function RolesPage() {
         </div>
 
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-          <StatsCard title="System Roles" value={SYSTEM_ROLES.length} icon={<ShieldCheck className="h-5 w-5" />} />
+          <StatsCard title="System Roles" value={systemRoles.length} icon={<ShieldCheck className="h-5 w-5" />} />
           <StatsCard title="Custom Roles" value={customRoles.length} animate icon={<Shield className="h-5 w-5" />} />
           <StatsCard title="Total Permissions" value={ALL_PERMISSIONS.length} icon={<Lock className="h-5 w-5" />} />
           <StatsCard title="Permission Groups" value={PERM_GROUPS.length} icon={<Users className="h-5 w-5" />} />
@@ -174,7 +205,7 @@ export default function RolesPage() {
         <div className="space-y-3">
           <h2 className="text-lg font-bold">All Roles</h2>
           <AnimatePresence mode="popLayout">
-            {allRoles.map((role) => {
+            {roles.map((role) => {
               const isExpanded = expandedId === role.id;
               return (
                 <motion.div key={role.id} layout initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
@@ -237,7 +268,7 @@ export default function RolesPage() {
                                   <Shield className="h-3 w-3" />Edit
                                 </Button>
                                 <Button size="sm" variant="outline" className="gap-1.5 text-xs text-red-600 border-red-200 hover:bg-red-50"
-                                  onClick={() => { dispatch(deleteCustomRole(role.id)); toast.success("Role deleted"); setExpandedId(null); }}>
+                                  onClick={() => handleDelete(role.id)}>
                                   <Trash2 className="h-3 w-3" />Delete
                                 </Button>
                               </div>

@@ -80,7 +80,7 @@ export interface OrderTypeDistribution {
 }
 
 /** User role for RBAC */
-export type UserRole = "super_admin" | "owner" | "admin" | "cashier" | "kitchen";
+export type UserRole = "super_admin" | "owner" | "admin" | "cashier" | "kitchen" | (string & {});
 
 export interface AuthUser {
   id: string;

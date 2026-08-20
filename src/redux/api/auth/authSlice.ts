@@ -6,6 +6,7 @@ const AUTH_STORAGE_KEY = "pos_auth";
 export interface AuthState {
   user: AuthUser | null;
   token: string | null;
+  permissions: string[];
   subscription: SubscriptionState | null;
   _rehydrated: boolean;
 }
@@ -13,6 +14,7 @@ export interface AuthState {
 const initialState: AuthState = {
   user: null,
   token: null,
+  permissions: [],
   subscription: null,
   _rehydrated: false,
 };
@@ -39,15 +41,17 @@ const authSlice = createSlice({
         state.subscription = null;
       }
     },
-    setCredentials(state, action: { payload: { user: AuthUser; token: string; subscription?: SubscriptionState | null } | null }) {
+    setCredentials(state, action: { payload: { user: AuthUser; token: string; permissions?: string[]; subscription?: SubscriptionState | null } | null }) {
       if (!action.payload) {
         state.user = null;
         state.token = null;
+        state.permissions = [];
         state.subscription = null;
         return;
       }
       state.user = action.payload.user;
       state.token = action.payload.token;
+      state.permissions = action.payload.permissions ?? [];
       state.subscription = action.payload.subscription ?? null;
     },
     setRehydrated(state) {
@@ -59,22 +63,26 @@ const authSlice = createSlice({
     setSubscription(state, action: { payload: SubscriptionState | null }) {
       state.subscription = action.payload;
     },
+    setPermissions(state, action: { payload: string[] }) {
+      state.permissions = action.payload;
+    },
     logout(state) {
       state.user = null;
       state.token = null;
+      state.permissions = [];
       state.subscription = null;
     },
   },
 });
 
-export const { setUser, setRole, logout, setCredentials, setRehydrated, setSubscription } = authSlice.actions;
+export const { setUser, setRole, logout, setCredentials, setRehydrated, setSubscription, setPermissions } = authSlice.actions;
 
-export function loadStoredAuth(): { user: AuthUser; token: string; subscription?: SubscriptionState | null } | null {
+export function loadStoredAuth(): { user: AuthUser; token: string; permissions?: string[]; subscription?: SubscriptionState | null } | null {
   if (typeof window === "undefined") return null;
   try {
     const raw = localStorage.getItem(AUTH_STORAGE_KEY);
     if (!raw) return null;
-    const parsed = JSON.parse(raw) as { user: AuthUser; token: string; subscription?: SubscriptionState | null };
+    const parsed = JSON.parse(raw) as { user: AuthUser; token: string; permissions?: string[]; subscription?: SubscriptionState | null };
     if (parsed?.user && parsed?.token) {
       setAuthCookies(parsed.user);
       return parsed;
@@ -85,7 +93,7 @@ export function loadStoredAuth(): { user: AuthUser; token: string; subscription?
   return null;
 }
 
-export function saveAuthToStorage(payload: { user: AuthUser; token: string; subscription?: SubscriptionState | null } | null) {
+export function saveAuthToStorage(payload: { user: AuthUser; token: string; permissions?: string[]; subscription?: SubscriptionState | null } | null) {
   if (typeof window === "undefined") return;
   if (!payload) {
     localStorage.removeItem(AUTH_STORAGE_KEY);

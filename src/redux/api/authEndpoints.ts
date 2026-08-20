@@ -9,7 +9,7 @@ export const authEndpoints = baseApi.injectEndpoints({
     }),
     register: builder.mutation<User, { name: string; email: string; password: string; role: string; branchId: string }>({
       query: (body) => ({ url: "/auth/register", method: "POST", body }),
-      invalidatesTags: ["Auth"],
+      invalidatesTags: ["Auth", "Users"],
     }),
     registerOrganization: builder.mutation<AuthResponse, RegisterOrgInput>({
       query: (body) => ({ url: "/auth/register-organization", method: "POST", body }),

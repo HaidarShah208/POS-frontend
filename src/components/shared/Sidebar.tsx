@@ -54,7 +54,8 @@ export function Sidebar({ collapsed = false }: SidebarProps) {
   const user = useAppSelector((s) => s.auth?.user);
   const businessName =
     useAppSelector((s) => s.settings?.general?.businessName?.trim()) || "Restaurant POS";
-  const navItems = user ? getNavItemsForRole(user.role) : [];
+  const permissions = useAppSelector((s) => s.auth?.permissions);
+  const navItems = user ? getNavItemsForRole(user.role, permissions) : [];
 
   return (
     <div className="flex h-full flex-col">

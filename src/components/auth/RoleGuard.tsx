@@ -13,7 +13,8 @@ type RoleGuardProps = {
 
 export function RoleGuard(props: RoleGuardProps) {
   const user = useAppSelector((s) => s.auth?.user);
-  const allowed = user && hasPermission(user.role, props.permission);
+  const perms = useAppSelector((s) => s.auth?.permissions);
+  const allowed = user && hasPermission(user.role, props.permission, perms);
   if (allowed) return <>{props.children}</>;
   if (props.fallback) return <>{props.fallback}</>;
   return (
@@ -37,12 +38,14 @@ type PermissionGateProps = {
 
 export function PermissionGate({ permission, children, fallback }: PermissionGateProps) {
   const user = useAppSelector((s) => s.auth?.user);
-  const allowed = user && hasPermission(user.role, permission);
+  const perms = useAppSelector((s) => s.auth?.permissions);
+  const allowed = user && hasPermission(user.role, permission, perms);
   if (allowed) return <>{children}</>;
   return fallback ? <>{fallback}</> : null;
 }
 
 export function useHasPermission(permission: Permission): boolean {
   const user = useAppSelector((s) => s.auth?.user);
-  return !!user && hasPermission(user.role, permission);
+  const perms = useAppSelector((s) => s.auth?.permissions);
+  return !!user && hasPermission(user.role, permission, perms);
 }
