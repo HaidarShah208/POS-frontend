@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useMemo } from "react";
+import { useDebouncedValue } from "@/hooks/useDebouncedValue";
 import { motion, AnimatePresence } from "framer-motion";
 import { PageMotion } from "@/components/shared/PageMotion";
 import { StatsCard } from "@/components/admin/StatsCard";
@@ -449,13 +450,22 @@ function SupplierRow({ supplier, onClick }: { supplier: Supplier; onClick: () =>
 }
 
 export default function SuppliersPage() {
-  const { data: suppliers = [], isLoading, isError, refetch } = useGetSuppliersQuery();
-  const [createSupplier] = useCreateSupplierMutation();
   const [searchQuery, setSearchQuery] = useState("");
+  const debouncedSearch = useDebouncedValue(searchQuery, 300);
   const [statusFilter, setStatusFilter] = useState<StatusFilter>("all");
   const [showAddForm, setShowAddForm] = useState(false);
   const [selectedSupplier, setSelectedSupplier] = useState<Supplier | null>(null);
   const [drawerOpen, setDrawerOpen] = useState(false);
+
+  const queryParams = useMemo(() => {
+    const params: Record<string, unknown> = {};
+    if (debouncedSearch.trim()) params.search = debouncedSearch.trim();
+    if (statusFilter !== "all") params.status = statusFilter;
+    return params;
+  }, [debouncedSearch, statusFilter]);
+
+  const { data: suppliers = [], isLoading, isError, refetch } = useGetSuppliersQuery(queryParams);
+  const [createSupplier] = useCreateSupplierMutation();
 
   const stats = useMemo(() => {
     const total = suppliers.length;
@@ -466,19 +476,8 @@ export default function SuppliersPage() {
   }, [suppliers]);
 
   const filtered = useMemo(() => {
-    let result = suppliers;
-    if (statusFilter !== "all") result = result.filter((s) => s.status === statusFilter);
-    if (searchQuery.trim()) {
-      const q = searchQuery.toLowerCase().trim();
-      result = result.filter((s) =>
-        s.name.toLowerCase().includes(q) ||
-        s.contactPerson?.toLowerCase().includes(q) ||
-        s.email?.toLowerCase().includes(q) ||
-        s.phone?.includes(q)
-      );
-    }
-    return [...result].sort((a, b) => (b.totalSpent ?? 0) - (a.totalSpent ?? 0));
-  }, [suppliers, statusFilter, searchQuery]);
+    return [...suppliers].sort((a, b) => (b.totalSpent ?? 0) - (a.totalSpent ?? 0));
+  }, [suppliers]);
 
   const handleAdd = async (data: Partial<Supplier>) => {
     try {

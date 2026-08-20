@@ -1,6 +1,7 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useMemo, useState, useCallback } from "react";
+import { useDebouncedValue } from "@/hooks/useDebouncedValue";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -294,6 +295,7 @@ export default function OrdersPage() {
   const [page, setPage] = useState(1);
   const [perPage, setPerPage] = useState(10);
   const [search, setSearch] = useState("");
+  const debouncedSearch = useDebouncedValue(search, 300);
   const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
 
   const { dateFrom, dateTo } = useMemo(() => getDateRange(datePreset), [datePreset]);
@@ -301,15 +303,16 @@ export default function OrdersPage() {
   const queryParams = useMemo(() => {
     const params: Record<string, unknown> = { page, limit: perPage, dateFrom, dateTo };
     if (statusFilter !== "all") params.status = statusFilter;
+    if (debouncedSearch.trim()) params.search = debouncedSearch.trim();
     return params;
-  }, [page, perPage, statusFilter, dateFrom, dateTo]);
+  }, [page, perPage, statusFilter, dateFrom, dateTo, debouncedSearch]);
 
-  const { data: ordersResponse, isLoading } = useGetOrdersQuery(queryParams);
+  const { data: ordersResponse, isLoading, isFetching } = useGetOrdersQuery(queryParams);
 
   const orders = ordersResponse?.data ?? [];
   const total = ordersResponse?.total ?? 0;
   const totalPages = ordersResponse?.totalPages ?? 1;
-  const filteredOrders = useMemo(() => filterOrdersBySearch(orders, search), [orders, search]);
+  const filteredOrders = orders;
   const start = total === 0 ? 0 : (page - 1) * perPage + 1;
   const end = Math.min(page * perPage, total);
   const pageNumbers = useMemo(() => getPageNumbers(page, totalPages), [page, totalPages]);
@@ -332,7 +335,7 @@ export default function OrdersPage() {
           <Input
             placeholder="Search orders..."
             value={search}
-            onChange={(e) => setSearch(e.target.value)}
+            onChange={(e) => { setSearch(e.target.value); setPage(1); }}
             className="pl-9 h-10"
           />
         </div>

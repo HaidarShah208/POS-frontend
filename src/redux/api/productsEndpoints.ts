@@ -5,7 +5,10 @@ export const productsEndpoints = baseApi.injectEndpoints({
   endpoints: (builder) => ({
     getProducts: builder.query<PaginatedResponse<Product>, GetProductsParams | void>({
       query: (params) => ({ url: "/products", params: params ?? {} }),
-      providesTags: ["Products"],
+      providesTags: (result) =>
+        result?.data
+          ? [...result.data.map(({ id }) => ({ type: "Products" as const, id })), "Products"]
+          : ["Products"],
     }),
     getProductById: builder.query<Product | null, string>({
       query: (id) => `/products/${id}`,
@@ -13,19 +16,22 @@ export const productsEndpoints = baseApi.injectEndpoints({
     }),
     createProduct: builder.mutation<Product, Partial<Product> & { name: string; categoryId: string; price: number }>({
       query: (body) => ({ url: "/products", method: "POST", body }),
-      invalidatesTags: ["Products"],
+      invalidatesTags: ["Products", "Inventory"],
     }),
     updateProduct: builder.mutation<Product, Product>({
       query: (body) => ({ url: `/products/${body.id}`, method: "PUT", body }),
-      invalidatesTags: (_r, _e, { id }) => [{ type: "Products", id }],
+      invalidatesTags: (_r, _e, { id }) => [{ type: "Products", id }, "Products"],
     }),
     deleteProduct: builder.mutation<void, string>({
       query: (id) => ({ url: `/products/${id}`, method: "DELETE" }),
-      invalidatesTags: ["Products"],
+      invalidatesTags: ["Products", "Inventory"],
     }),
     getCategories: builder.query<Category[], void>({
       query: () => "/products/categories",
-      providesTags: ["Categories"],
+      providesTags: (result) =>
+        result
+          ? [...result.map(({ id }) => ({ type: "Categories" as const, id })), "Categories"]
+          : ["Categories"],
     }),
     getCategoryById: builder.query<Category, string>({
       query: (id) => `/products/categories/${id}`,
@@ -37,7 +43,7 @@ export const productsEndpoints = baseApi.injectEndpoints({
     }),
     updateCategory: builder.mutation<Category, Category>({
       query: (body) => ({ url: `/products/categories/${body.id}`, method: "PATCH", body }),
-      invalidatesTags: ["Categories"],
+      invalidatesTags: (_r, _e, { id }) => [{ type: "Categories", id }, "Categories"],
     }),
     deleteCategory: builder.mutation<void, string>({
       query: (id) => ({ url: `/products/categories/${id}`, method: "DELETE" }),
@@ -58,4 +64,3 @@ export const {
   useUpdateCategoryMutation,
   useDeleteCategoryMutation,
 } = productsEndpoints;
-

@@ -1,6 +1,7 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { useState, useMemo, useCallback } from "react";
+import { useDebouncedValue } from "@/hooks/useDebouncedValue";
 import { motion, AnimatePresence } from "framer-motion";
 import { PageMotion } from "@/components/shared/PageMotion";
 import { StatsCard } from "@/components/admin/StatsCard";
@@ -227,13 +228,22 @@ function CustomerRow({ customer, onClick }: { customer: Customer; onClick: () =>
 }
 
 export default function CustomersPage() {
-  const { data: customers = [], isLoading, isError, refetch } = useGetCustomersQuery();
-  const [createCustomer, { isLoading: creating }] = useCreateCustomerMutation();
   const [searchQuery, setSearchQuery] = useState("");
+  const debouncedSearch = useDebouncedValue(searchQuery, 300);
   const [statusFilter, setStatusFilter] = useState<StatusFilter>("all");
   const [showAddForm, setShowAddForm] = useState(false);
   const [selectedCustomer, setSelectedCustomer] = useState<Customer | null>(null);
   const [drawerOpen, setDrawerOpen] = useState(false);
+
+  const queryParams = useMemo(() => {
+    const params: Record<string, unknown> = {};
+    if (debouncedSearch.trim()) params.search = debouncedSearch.trim();
+    if (statusFilter !== "all") params.status = statusFilter;
+    return params;
+  }, [debouncedSearch, statusFilter]);
+
+  const { data: customers = [], isLoading, isError, refetch } = useGetCustomersQuery(queryParams);
+  const [createCustomer, { isLoading: creating }] = useCreateCustomerMutation();
 
   const stats = useMemo(() => {
     const total = customers.length;
@@ -245,30 +255,14 @@ export default function CustomersPage() {
   }, [customers]);
 
   const filtered = useMemo(() => {
-    let result = customers;
-
-    if (statusFilter !== "all") {
-      result = result.filter((c) => (c.status ?? "active") === statusFilter);
-    }
-
-    if (searchQuery.trim()) {
-      const q = searchQuery.toLowerCase().trim();
-      result = result.filter(
-        (c) =>
-          c.name.toLowerCase().includes(q) ||
-          c.email?.toLowerCase().includes(q) ||
-          c.phone?.includes(q)
-      );
-    }
-
-    return [...result].sort((a, b) => {
+    return [...customers].sort((a, b) => {
       const sa = a.status ?? "active";
       const sb = b.status ?? "active";
       if (sa === "vip" && sb !== "vip") return -1;
       if (sb === "vip" && sa !== "vip") return 1;
       return (b.totalSpent ?? 0) - (a.totalSpent ?? 0);
     });
-  }, [customers, statusFilter, searchQuery]);
+  }, [customers]);
 
   const handleAddCustomer = async (data: Partial<Customer>) => {
     try {

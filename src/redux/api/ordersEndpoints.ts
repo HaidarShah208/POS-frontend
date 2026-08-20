@@ -13,7 +13,10 @@ export const ordersEndpoints = baseApi.injectEndpoints({
   endpoints: (builder) => ({
     getOrders: builder.query<PaginatedResponse<Order>, GetOrdersParams | void>({
       query: (params) => ({ url: "/orders", params: params ?? {} }),
-      providesTags: ["Orders"],
+      providesTags: (result) =>
+        result?.data
+          ? [...result.data.map(({ id }) => ({ type: "Orders" as const, id })), "Orders"]
+          : ["Orders"],
     }),
     getOrderById: builder.query<Order, string>({
       query: (id) => `/orders/${id}`,
@@ -21,11 +24,11 @@ export const ordersEndpoints = baseApi.injectEndpoints({
     }),
     placeOrder: builder.mutation<PlaceOrderResponse, PlaceOrderRequest>({
       query: (body) => ({ url: "/orders", method: "POST", body }),
-      invalidatesTags: ["Orders", "Kitchen"],
+      invalidatesTags: ["Orders", "Kitchen", "Inventory"],
     }),
     updateOrderStatus: builder.mutation<void, { id: string; status: OrderStatus }>({
       query: ({ id, status }) => ({ url: `/orders/${id}/status`, method: "PATCH", body: { status } }),
-      invalidatesTags: ["Orders", "Kitchen"],
+      invalidatesTags: (_r, _e, { id }) => [{ type: "Orders", id }, "Orders", "Kitchen"],
     }),
     getOrdersByBranch: builder.query<Order[], string>({
       query: (branchId) => `/orders/branch/${branchId}`,
@@ -33,7 +36,10 @@ export const ordersEndpoints = baseApi.injectEndpoints({
     }),
     getKitchenOrders: builder.query<Order[], string>({
       query: (branchId) => `/orders/kitchen/${branchId}`,
-      providesTags: ["Kitchen"],
+      providesTags: (result) =>
+        result
+          ? [...result.map(({ id }) => ({ type: "Kitchen" as const, id })), "Kitchen"]
+          : ["Kitchen"],
     }),
     updateKitchenOrderStatus: builder.mutation<void, { orderId: string; status: KitchenOrderStatus }>({
       query: (body) => ({ url: "/orders/kitchen/status", method: "PATCH", body }),
