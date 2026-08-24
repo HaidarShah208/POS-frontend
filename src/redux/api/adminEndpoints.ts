@@ -1,5 +1,6 @@
 import { baseApi } from "./baseApi";
 import type { PlatformStats, Organization } from "@/types/api/index";
+import type { PaymentSubmission } from "./subscriptionEndpoints";
 
 interface PaginatedOrgs {
   data: Organization[];
@@ -42,6 +43,10 @@ export const adminEndpoints = baseApi.injectEndpoints({
       }),
       invalidatesTags: ["Organizations", "PlatformStats"],
     }),
+    getOrganizationPayments: builder.query<PaymentSubmission[], string>({
+      query: (id) => `/admin/organizations/${id}/payments`,
+      providesTags: (_r, _e, id) => [{ type: "Organizations", id }],
+    }),
   }),
 });
 
@@ -51,4 +56,5 @@ export const {
   useGetOrganizationByIdQuery,
   useUpdateOrganizationMutation,
   useUpdateOrganizationStatusMutation,
+  useGetOrganizationPaymentsQuery,
 } = adminEndpoints;

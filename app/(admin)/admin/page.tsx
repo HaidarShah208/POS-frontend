@@ -158,8 +158,7 @@ export default function AdminDashboard() {
                 <StatsCard title="Suspended" value={stats.suspendedOrganizations} icon={<Pause className="w-5 h-5 text-red-500" />} />
               </div>
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 sm:gap-6">
-                <StatsCard title="Total Users" value={stats.totalUsers} icon={<Users className="w-5 h-5 text-violet-500" />} />
-                <StatsCard title="Total Orders" value={stats.totalOrders} icon={<ShoppingCart className="w-5 h-5 text-cyan-500" />} />
+ 
                 <StatsCard title="Total Revenue" value={formatCurrency(stats.totalRevenue)} icon={<DollarSign className="w-5 h-5 text-emerald-500" />} />
               </div>
             </>
@@ -203,7 +202,7 @@ export default function AdminDashboard() {
                     <Card key={p.id} className="hover:shadow-md transition-shadow">
                       <CardContent className="p-4 sm:p-5">
                         <div className="flex flex-col sm:flex-row sm:items-center gap-4">
-                          <div className="flex items-center gap-3 flex-1 min-w-0">
+                          <Link href={`/admin/restaurants/${p.organizationId}`} className="flex items-center gap-3 flex-1 min-w-0 hover:opacity-80 transition-opacity">
                             <div className="h-10 w-10 rounded-xl bg-[var(--muted)] flex items-center justify-center shrink-0">
                               {PAYMENT_METHOD_ICON[p.paymentMethod] ?? <CreditCard className="h-4 w-4" />}
                             </div>
@@ -213,7 +212,7 @@ export default function AdminDashboard() {
                                 {p.paymentMethod} · {p.transactionId ?? "—"} · {new Date(p.createdAt).toLocaleDateString()}
                               </p>
                             </div>
-                          </div>
+                          </Link>
 
                           <div className="flex items-center gap-3 flex-wrap">
                             <span className="text-lg font-bold tabular-nums">{formatCurrency(Number(p.amount))}</span>

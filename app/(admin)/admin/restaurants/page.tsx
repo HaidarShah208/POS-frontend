@@ -181,8 +181,10 @@ export default function RestaurantsPage() {
                         return (
                           <tr key={org.id} className="hover:bg-[var(--muted)]/50 transition-colors">
                             <td className="px-6 py-4">
-                              <p className="font-medium text-sm">{org.name}</p>
-                              <p className="text-xs text-[var(--muted-foreground)]">{org.email || org.slug}</p>
+                              <Link href={`/admin/restaurants/${org.id}`} className="hover:opacity-70 transition-opacity">
+                                <p className="font-medium text-sm text-[var(--primary)]">{org.name}</p>
+                                <p className="text-xs text-[var(--muted-foreground)]">{org.email || org.slug}</p>
+                              </Link>
                             </td>
                             <td className="px-6 py-4"><Badge variant={sb.variant}>{sb.label}</Badge></td>
                             <td className="px-6 py-4 text-sm text-[var(--muted-foreground)]">{org.subscription?.plan?.name || "—"}</td>
@@ -209,6 +211,9 @@ export default function RestaurantsPage() {
                                       el.style.left = `${rect.right - el.offsetWidth}px`;
                                     }}
                                   >
+                                    <Link href={`/admin/restaurants/${org.id}`} className="w-full px-4 py-2 text-left text-sm hover:bg-[var(--muted)] flex items-center gap-2 text-[var(--foreground)]">
+                                      <Building2 className="w-4 h-4" />View Details
+                                    </Link>
                                     {org.status !== "active" && (
                                       <button onClick={() => handleStatusChange(org.id, "active")} className="w-full px-4 py-2 text-left text-sm hover:bg-[var(--muted)] flex items-center gap-2 text-emerald-600">
                                         <Play className="w-4 h-4" />Activate
