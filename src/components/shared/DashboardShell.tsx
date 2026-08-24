@@ -46,12 +46,12 @@ export function DashboardShell({ children }: { children: React.ReactNode }) {
   const { data: liveSub } = useGetMySubscriptionQuery(undefined, { skip: !user || isSuperAdmin, pollingInterval: 60000 });
 
   const subscription = liveSub
-    ? { status: liveSub.status, planSlug: liveSub.plan?.slug ?? "", trialEndsAt: liveSub.trialEndsAt }
+    ? { status: liveSub.status, planSlug: liveSub.plan?.slug ?? "", trialEndsAt: liveSub.trialEndsAt, expiresAt: liveSub.expiresAt }
     : storedSubscription;
 
   useEffect(() => {
     if (!liveSub || !user || !token || isSuperAdmin) return;
-    const newSub = { status: liveSub.status, planSlug: liveSub.plan?.slug ?? "", trialEndsAt: liveSub.trialEndsAt };
+    const newSub = { status: liveSub.status, planSlug: liveSub.plan?.slug ?? "", trialEndsAt: liveSub.trialEndsAt, expiresAt: liveSub.expiresAt };
     if (
       storedSubscription?.status !== newSub.status ||
       storedSubscription?.planSlug !== newSub.planSlug

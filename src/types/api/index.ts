@@ -377,6 +377,8 @@ export interface Organization {
     status: string;
     plan?: { name: string; slug: string };
     trialEndsAt?: string | null;
+    startsAt?: string | null;
+    expiresAt?: string | null;
   };
 }
 

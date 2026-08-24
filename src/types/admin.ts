@@ -95,4 +95,5 @@ export interface SubscriptionState {
   status: string;
   planSlug: string;
   trialEndsAt: string | null;
+  expiresAt?: string | null;
 }

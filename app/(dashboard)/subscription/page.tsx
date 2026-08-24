@@ -202,114 +202,184 @@ export default function SubscriptionPage() {
   }
 
   if (step === "payment" && selectedPlan) {
+    const planFeatures = (selectedPlan.features as Record<string, unknown>)?.list as string[] ?? DEFAULT_FEATURES[selectedPlan.slug] ?? [];
+
     return (
       <RoleGuard permission="settings">
         <PageMotion>
-          <div className="max-w-2xl mx-auto space-y-6">
-            <div className="flex items-center gap-3">
-              <Button variant="ghost" size="sm" onClick={() => { setStep("plans"); setErrors({}); }}>
-                ← Back to Plans
-              </Button>
-            </div>
+          <div className="max-w-5xl mx-auto">
+            <button
+              onClick={() => { setStep("plans"); setErrors({}); }}
+              className="flex items-center gap-1.5 text-sm text-[var(--muted-foreground)] hover:text-[var(--foreground)] mb-6 transition-colors"
+            >
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M19 12H5M12 19l-7-7 7-7" /></svg>
+              Back to Plans
+            </button>
 
-            <div className="text-center space-y-2">
-              <h2 className="text-2xl font-bold">Complete Payment</h2>
-              <p className="text-[var(--muted-foreground)]">
-                {selectedPlan.name} — {formatCurrency(Number(selectedPlan.price))}/month
-              </p>
-            </div>
-
-            <Card>
-              <CardContent className="p-6 space-y-6">
+            <div className="grid grid-cols-1 lg:grid-cols-5 gap-6">
+              <div className="lg:col-span-3 space-y-5">
                 <div>
-                  <h3 className="text-sm font-semibold mb-3">Select Payment Method</h3>
-                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-                    {PAYMENT_METHODS.map((pm) => (
-                      <button
-                        key={pm.id}
-                        onClick={() => { setPaymentMethod(pm.id); setErrors({ ...errors, method: "" }); }}
-                        className={`relative p-4 rounded-xl border-2 transition-all text-left ${
-                          paymentMethod === pm.id
-                            ? "border-[var(--primary)] bg-[var(--primary)]/5 ring-2 ring-[var(--primary)]/20"
-                            : pm.color
-                        }`}
-                      >
-                        <div className="flex flex-col items-center gap-2 text-center">
-                          {pm.icon}
-                          <span className="font-medium text-sm">{pm.name}</span>
-                          <span className="text-[10px] text-[var(--muted-foreground)]">{pm.details}</span>
-                        </div>
-                        {paymentMethod === pm.id && (
-                          <div className="absolute top-2 right-2">
-                            <CheckCircle2 className="h-4 w-4 text-[var(--primary)]" />
-                          </div>
-                        )}
-                      </button>
-                    ))}
-                  </div>
-                  {errors.method && <p className="text-xs text-red-500 mt-1">{errors.method}</p>}
+                  <h2 className="text-xl font-bold">Payment Details</h2>
+                  <p className="text-sm text-[var(--muted-foreground)] mt-1">Complete your payment to activate your plan</p>
                 </div>
 
-                <div className="space-y-4">
-                  <div>
-                    <label className="text-sm font-medium">Account Holder Name</label>
-                    <Input
-                      value={accountTitle}
-                      onChange={(e) => { setAccountTitle(e.target.value); setErrors({ ...errors, accountTitle: "" }); }}
-                      placeholder="e.g. Muhammad Ali"
-                      className="mt-1"
-                    />
-                    {errors.accountTitle && <p className="text-xs text-red-500 mt-1">{errors.accountTitle}</p>}
-                  </div>
-                  <div>
-                    <label className="text-sm font-medium">Transaction ID / Reference Number</label>
-                    <Input
-                      value={transactionId}
-                      onChange={(e) => { setTransactionId(e.target.value); setErrors({ ...errors, transactionId: "" }); }}
-                      placeholder="e.g. TXN123456789"
-                      className="mt-1"
-                    />
-                    {errors.transactionId && <p className="text-xs text-red-500 mt-1">{errors.transactionId}</p>}
-                  </div>
-                  <div>
-                    <label className="text-sm font-medium">Payment Receipt Screenshot</label>
-                    <div className="mt-1">
-                      {receiptPreview ? (
-                        <div className="relative rounded-xl border border-[var(--border)] overflow-hidden">
-                          <img src={receiptPreview} alt="Receipt" className="w-full max-h-48 object-contain bg-[var(--muted)]/30" />
-                          <button
-                            onClick={() => { setReceiptFile(null); setReceiptPreview(null); }}
-                            className="absolute top-2 right-2 p-1 rounded-full bg-red-100 text-red-600 hover:bg-red-200"
-                          >
-                            <XCircle className="h-4 w-4" />
-                          </button>
-                        </div>
-                      ) : (
-                        <label className="flex flex-col items-center gap-2 p-6 rounded-xl border-2 border-dashed border-[var(--border)] hover:border-[var(--primary)]/50 cursor-pointer transition-colors bg-[var(--muted)]/10">
-                          <Upload className="h-8 w-8 text-[var(--muted-foreground)]" />
-                          <span className="text-sm text-[var(--muted-foreground)]">Click to upload receipt</span>
-                          <span className="text-[10px] text-[var(--muted-foreground)]">JPEG, PNG, GIF, WebP · Max 5MB</span>
-                          <input type="file" accept="image/*" onChange={handleFileChange} className="hidden" />
-                        </label>
-                      )}
+                <Card>
+                  <CardContent className="p-5">
+                    <h3 className="text-sm font-semibold mb-3">Payment Method</h3>
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+                      {PAYMENT_METHODS.map((pm) => (
+                        <button
+                          key={pm.id}
+                          onClick={() => { setPaymentMethod(pm.id); setErrors({ ...errors, method: "" }); }}
+                          className={`relative p-3 sm:p-4 rounded-xl border-2 transition-all ${
+                            paymentMethod === pm.id
+                              ? "border-[var(--primary)] bg-[var(--primary)]/5 shadow-sm"
+                              : "border-[var(--border)] hover:border-[var(--primary)]/30"
+                          }`}
+                        >
+                          <div className="flex flex-col items-center gap-1.5 text-center">
+                            <div className={`w-10 h-10 rounded-lg flex items-center justify-center ${
+                              pm.id === "EASYPAISA" ? "bg-green-100 text-green-600" :
+                              pm.id === "JAZZCASH" ? "bg-red-100 text-red-600" :
+                              "bg-blue-100 text-blue-600"
+                            }`}>
+                              {pm.icon}
+                            </div>
+                            <span className="font-medium text-xs sm:text-sm">{pm.name}</span>
+                            <span className="text-[9px] sm:text-[10px] text-[var(--muted-foreground)] leading-tight">{pm.details}</span>
+                          </div>
+                          {paymentMethod === pm.id && (
+                            <CheckCircle2 className="absolute top-1.5 right-1.5 h-4 w-4 text-[var(--primary)]" />
+                          )}
+                        </button>
+                      ))}
                     </div>
-                    {errors.receipt && <p className="text-xs text-red-500 mt-1">{errors.receipt}</p>}
-                  </div>
-                </div>
+                    {errors.method && <p className="text-xs text-red-500 mt-2">{errors.method}</p>}
+                  </CardContent>
+                </Card>
+
+                <Card>
+                  <CardContent className="p-5 space-y-4">
+                    <h3 className="text-sm font-semibold">Payment Information</h3>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                      <div>
+                        <label className="text-xs font-medium text-[var(--muted-foreground)] uppercase tracking-wide">Account Holder Name</label>
+                        <Input
+                          value={accountTitle}
+                          onChange={(e) => { setAccountTitle(e.target.value); setErrors({ ...errors, accountTitle: "" }); }}
+                          placeholder="Muhammad Ali"
+                          className="mt-1.5"
+                        />
+                        {errors.accountTitle && <p className="text-xs text-red-500 mt-1">{errors.accountTitle}</p>}
+                      </div>
+                      <div>
+                        <label className="text-xs font-medium text-[var(--muted-foreground)] uppercase tracking-wide">Transaction ID / Reference</label>
+                        <Input
+                          value={transactionId}
+                          onChange={(e) => { setTransactionId(e.target.value); setErrors({ ...errors, transactionId: "" }); }}
+                          placeholder="TXN123456789"
+                          className="mt-1.5"
+                        />
+                        {errors.transactionId && <p className="text-xs text-red-500 mt-1">{errors.transactionId}</p>}
+                      </div>
+                    </div>
+                    <div>
+                      <label className="text-xs font-medium text-[var(--muted-foreground)] uppercase tracking-wide">Payment Receipt</label>
+                      <div className="mt-1.5">
+                        {receiptPreview ? (
+                          <div className="relative rounded-xl border border-[var(--border)] overflow-hidden bg-[var(--muted)]/20">
+                            <img src={receiptPreview} alt="Receipt" className="w-full max-h-40 object-contain" />
+                            <button
+                              onClick={() => { setReceiptFile(null); setReceiptPreview(null); }}
+                              className="absolute top-2 right-2 p-1.5 rounded-full bg-white/90 text-red-500 hover:bg-white shadow-sm"
+                            >
+                              <XCircle className="h-4 w-4" />
+                            </button>
+                          </div>
+                        ) : (
+                          <label className="flex items-center gap-3 p-4 rounded-xl border-2 border-dashed border-[var(--border)] hover:border-[var(--primary)]/40 cursor-pointer transition-colors">
+                            <div className="w-10 h-10 rounded-lg bg-[var(--muted)] flex items-center justify-center shrink-0">
+                              <Upload className="h-5 w-5 text-[var(--muted-foreground)]" />
+                            </div>
+                            <div>
+                              <p className="text-sm font-medium">Upload receipt screenshot</p>
+                              <p className="text-[10px] text-[var(--muted-foreground)]">JPEG, PNG, GIF, WebP · Max 5MB</p>
+                            </div>
+                            <input type="file" accept="image/*" onChange={handleFileChange} className="hidden" />
+                          </label>
+                        )}
+                      </div>
+                      {errors.receipt && <p className="text-xs text-red-500 mt-1">{errors.receipt}</p>}
+                    </div>
+                  </CardContent>
+                </Card>
 
                 {errors.submit && (
-                  <div className="flex items-center gap-2 p-3 rounded-lg bg-red-50 text-red-700 text-sm">
+                  <div className="flex items-center gap-2 p-3 rounded-xl bg-red-50 border border-red-200 text-red-700 text-sm">
                     <AlertTriangle className="h-4 w-4 shrink-0" />
                     {errors.submit}
                   </div>
                 )}
 
-                <Button onClick={handleSubmitPayment} disabled={submitting} className="w-full gap-2 h-12 text-base">
-                  {submitting ? <Loader2 className="h-4 w-4 animate-spin" /> : <CreditCard className="h-4 w-4" />}
-                  {submitting ? "Submitting..." : `Pay ${formatCurrency(Number(selectedPlan.price))}`}
+                <Button onClick={handleSubmitPayment} disabled={submitting} className="w-full gap-2 h-12 text-base rounded-xl">
+                  {submitting ? <Loader2 className="h-5 w-5 animate-spin" /> : <CreditCard className="h-5 w-5" />}
+                  {submitting ? "Processing..." : `Submit Payment — ${formatCurrency(Number(selectedPlan.price))}`}
                 </Button>
-              </CardContent>
-            </Card>
+              </div>
+
+              <div className="lg:col-span-2">
+                <div className="lg:sticky lg:top-6 space-y-4">
+                  <Card>
+                    <CardContent className="p-5">
+                      <h3 className="text-sm font-semibold mb-4">Order Summary</h3>
+                      <div className={`rounded-xl bg-gradient-to-br ${PLAN_COLORS[selectedPlan.slug] ?? PLAN_COLORS.starter} p-4 text-white mb-4`}>
+                        <div className="flex items-center gap-2 mb-2">
+                          {PLAN_ICONS[selectedPlan.slug] ?? <Zap className="h-5 w-5" />}
+                          <span className="font-bold">{selectedPlan.name}</span>
+                        </div>
+                        <div className="flex items-baseline gap-1">
+                          <span className="text-2xl font-bold tabular-nums">{formatCurrency(Number(selectedPlan.price))}</span>
+                          <span className="text-sm opacity-80">/month</span>
+                        </div>
+                      </div>
+
+                      <div className="space-y-2 mb-4">
+                        {planFeatures.map((f, i) => (
+                          <div key={i} className="flex items-start gap-2 text-sm">
+                            <Check className="h-4 w-4 text-emerald-500 shrink-0 mt-0.5" />
+                            <span className="text-[var(--muted-foreground)]">{typeof f === "string" ? f : String(f)}</span>
+                          </div>
+                        ))}
+                      </div>
+
+                      <div className="border-t border-[var(--border)] pt-3 space-y-2">
+                        <div className="flex justify-between text-sm">
+                          <span className="text-[var(--muted-foreground)]">Plan</span>
+                          <span className="font-medium">{selectedPlan.name}</span>
+                        </div>
+                        <div className="flex justify-between text-sm">
+                          <span className="text-[var(--muted-foreground)]">Duration</span>
+                          <span className="font-medium">1 Month</span>
+                        </div>
+                        <div className="flex justify-between text-sm font-bold pt-2 border-t border-[var(--border)]">
+                          <span>Total</span>
+                          <span>{formatCurrency(Number(selectedPlan.price))}</span>
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
+
+                  <Card>
+                    <CardContent className="p-4">
+                      <div className="flex items-start gap-2 text-xs text-[var(--muted-foreground)]">
+                        <Shield className="h-4 w-4 shrink-0 mt-0.5 text-emerald-500" />
+                        <p>Your payment will be manually verified by our team. Once approved, your plan will be activated within 24 hours.</p>
+                      </div>
+                    </CardContent>
+                  </Card>
+                </div>
+              </div>
+            </div>
           </div>
         </PageMotion>
       </RoleGuard>
