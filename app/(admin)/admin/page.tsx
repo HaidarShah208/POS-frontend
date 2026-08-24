@@ -4,6 +4,7 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { useAppSelector, useAppDispatch } from "@/hooks/redux";
 import { logout, saveAuthToStorage } from "@/redux/api/auth/authSlice";
+import { baseApi } from "@/redux/api/baseApi";
 import { useGetPlatformStatsQuery } from "@/redux/api/adminEndpoints";
 import { PageMotion } from "@/components/shared/PageMotion";
 import { StatsCard } from "@/components/admin/StatsCard";
@@ -29,6 +30,7 @@ export default function AdminDashboard() {
 
   const handleLogout = () => {
     dispatch(logout());
+    dispatch(baseApi.util.resetApiState());
     saveAuthToStorage(null);
     router.push("/auth/login");
   };

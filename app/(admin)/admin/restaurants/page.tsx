@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useAppDispatch, useAppSelector } from "@/hooks/redux";
 import { logout, saveAuthToStorage } from "@/redux/api/auth/authSlice";
+import { baseApi } from "@/redux/api/baseApi";
 import {
   useGetOrganizationsQuery,
   useUpdateOrganizationStatusMutation,
@@ -53,6 +54,7 @@ export default function RestaurantsPage() {
 
   const handleLogout = () => {
     dispatch(logout());
+    dispatch(baseApi.util.resetApiState());
     saveAuthToStorage(null);
     router.push("/auth/login");
   };

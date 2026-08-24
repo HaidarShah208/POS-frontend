@@ -31,6 +31,7 @@ async function baseQueryWithAuth(
   const result = await rawBaseQuery(args, api, extra);
   if (result.error?.status === 401) {
     api.dispatch(logout());
+    api.dispatch(baseApi.util.resetApiState());
     if (typeof window !== "undefined") window.location.href = "/auth/login";
   }
   return result;

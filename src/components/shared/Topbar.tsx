@@ -6,6 +6,7 @@ import { usePathname, useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { useAppSelector, useAppDispatch } from "@/hooks/redux";
 import { logout, saveAuthToStorage } from "@/redux/api/auth";
+import { baseApi } from "@/redux/api/baseApi";
 import { cn } from "@/lib/utils";
 import { NotificationCenter } from "./NotificationCenter";
 import { CommandPalette } from "./CommandPalette";
@@ -63,6 +64,7 @@ export function Topbar({ onMenuClick, collapsed, onToggleCollapse }: TopbarProps
 
   const handleLogout = () => {
     dispatch(logout());
+    dispatch(baseApi.util.resetApiState());
     saveAuthToStorage(null);
     router.push("/auth/login");
   };

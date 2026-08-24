@@ -16,7 +16,7 @@ import { useGetOrdersQuery } from "@/redux/api/ordersEndpoints";
 import { useGetInventoryQuery } from "@/redux/api/inventoryEndpoints";
 import { useGetCustomersQuery } from "@/redux/api/customersEndpoints";
 import { useGetBranchesQuery } from "@/redux/api/branchesEndpoints";
-import { useAppSelector } from "@/hooks/redux";
+import { useGetOrgUsersQuery } from "@/redux/api/usersEndpoints";
 import { cn, formatCurrency } from "@/lib/utils";
 import type { Order } from "@/types/api/index";
 import {
@@ -25,7 +25,7 @@ import {
   ArrowUpRight, ArrowDownRight, Percent,
 } from "lucide-react";
 
-type ViewTab = "overview" | "sales" | "customers" | "inventory" | "employees";
+type ViewTab = "overview" | "sales" | "customers" | "inventory" | "staff";
 
 const DATE_PRESETS = [
   { label: "7d", days: 7 },
@@ -163,8 +163,7 @@ export default function AnalyticsPage() {
   const { data: ordersRes, isLoading } = useGetOrdersQuery({ dateFrom: startDate, dateTo: dateToExclusive, limit: 5000, ...(selectedBranch ? { branchId: selectedBranch } : {}) });
   const { data: inventoryRes } = useGetInventoryQuery();
   const { data: customersData } = useGetCustomersQuery({});
-  const employees = useAppSelector((s) => s.employees.employees);
-  const clockRecords = useAppSelector((s) => s.employees.clockRecords);
+  const { data: staffUsers = [] } = useGetOrgUsersQuery();
 
   const orders = ordersRes?.data ?? [];
   const inventory = inventoryRes?.data ?? [];
@@ -183,13 +182,11 @@ export default function AnalyticsPage() {
     return { totalItems, lowStock, outOfStock, totalValue };
   }, [inventory]);
 
-  const empStats = useMemo(() => {
-    const active = employees.filter((e) => e.status === "active").length;
-    const totalPayroll = employees.filter((e) => e.status === "active").reduce((s, e) => s + e.salary, 0);
-    const monthPrefix = toDateStr(new Date()).slice(0, 7);
-    const monthHours = clockRecords.filter((c) => c.clockIn.startsWith(monthPrefix)).reduce((s, c) => s + (c.hoursWorked ?? 0), 0);
-    return { total: employees.length, active, totalPayroll, monthHours };
-  }, [employees, clockRecords]);
+  const staffStats = useMemo(() => {
+    const roleCounts: Record<string, number> = {};
+    staffUsers.forEach((u) => { roleCounts[u.role] = (roleCounts[u.role] || 0) + 1; });
+    return { total: staffUsers.length, admins: roleCounts["admin"] ?? 0, cashiers: roleCounts["cashier"] ?? 0, kitchen: roleCounts["kitchen"] ?? 0 };
+  }, [staffUsers]);
 
   const custStats = useMemo(() => ({
     total: customers.length,
@@ -211,7 +208,7 @@ export default function AnalyticsPage() {
     { id: "sales", label: "Sales", icon: <TrendingUp className="h-4 w-4" /> },
     { id: "customers", label: "Customers", icon: <Users className="h-4 w-4" /> },
     { id: "inventory", label: "Inventory", icon: <Warehouse className="h-4 w-4" /> },
-    { id: "employees", label: "Employees", icon: <Activity className="h-4 w-4" /> },
+    { id: "staff", label: "Staff", icon: <Activity className="h-4 w-4" /> },
   ];
 
   return (
@@ -516,49 +513,37 @@ export default function AnalyticsPage() {
           </>
         )}
 
-        {viewTab === "employees" && (
+        {viewTab === "staff" && (
           <>
             <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-              <StatsCard title="Total Staff" value={empStats.total} animate icon={<Users className="h-5 w-5" />} />
-              <StatsCard title="Active" value={empStats.active} animate icon={<Activity className="h-5 w-5" />} />
-              <StatsCard title="Monthly Payroll" value={formatCurrency(empStats.totalPayroll)} icon={<DollarSign className="h-5 w-5" />} />
-              <StatsCard title="Hours (Month)" value={`${empStats.monthHours.toFixed(0)}h`} icon={<Clock className="h-5 w-5" />} />
+              <StatsCard title="Total Staff" value={staffStats.total} animate icon={<Users className="h-5 w-5" />} />
+              <StatsCard title="Admins" value={staffStats.admins} animate icon={<Activity className="h-5 w-5" />} />
+              <StatsCard title="Cashiers" value={staffStats.cashiers} animate icon={<Target className="h-5 w-5" />} />
+              <StatsCard title="Kitchen" value={staffStats.kitchen} animate icon={<Clock className="h-5 w-5" />} />
             </div>
             <Card>
               <CardContent className="p-0">
                 <div className="border-b border-[var(--border)] px-4 py-3">
-                  <h3 className="text-sm font-semibold">Employee Performance</h3>
-                  <p className="text-xs text-[var(--muted-foreground)]">Hours logged this month by employee</p>
+                  <h3 className="text-sm font-semibold">Staff Members</h3>
+                  <p className="text-xs text-[var(--muted-foreground)]">Your team members by role</p>
                 </div>
                 <div className="p-4">
-                  {employees.filter((e) => e.status === "active").length === 0 ? (
-                    <EmptyState title="No employees" description="Add employees to see performance." icon={<Users className="h-6 w-6" />} />
+                  {staffUsers.length === 0 ? (
+                    <EmptyState title="No staff" description="Add staff from the Staff page." icon={<Users className="h-6 w-6" />} />
                   ) : (
                     <div className="space-y-2">
-                      {employees.filter((e) => e.status === "active").map((emp) => {
-                        const monthPrefix = toDateStr(new Date()).slice(0, 7);
-                        const hrs = clockRecords.filter((c) => c.employeeId === emp.id && c.clockIn.startsWith(monthPrefix)).reduce((s, c) => s + (c.hoursWorked ?? 0), 0);
-                        const maxHrs = Math.max(...employees.filter((e) => e.status === "active").map((e) =>
-                          clockRecords.filter((c) => c.employeeId === e.id && c.clockIn.startsWith(monthPrefix)).reduce((s, c) => s + (c.hoursWorked ?? 0), 0)
-                        ), 1);
-                        return (
-                          <div key={emp.id} className="flex items-center gap-3 rounded-lg border border-[var(--border)] px-3 py-2.5">
-                            <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-[var(--primary)]/10 text-[var(--primary)] text-[10px] font-bold">
-                              {emp.name.split(" ").map((n) => n[0]).join("").slice(0, 2).toUpperCase()}
-                            </div>
-                            <div className="flex-1 min-w-0">
-                              <span className="text-sm font-medium truncate block">{emp.name}</span>
-                              <div className="h-1.5 rounded-full bg-[var(--muted)] overflow-hidden mt-1">
-                                <div className="h-full rounded-full bg-[var(--primary)]" style={{ width: `${(hrs / maxHrs) * 100}%` }} />
-                              </div>
-                            </div>
-                            <div className="text-right shrink-0">
-                              <span className="text-sm font-bold tabular-nums">{hrs.toFixed(1)}h</span>
-                              <p className="text-[10px] text-[var(--muted-foreground)]">{formatCurrency(emp.salary)}/mo</p>
-                            </div>
+                      {staffUsers.map((user) => (
+                        <div key={user.id} className="flex items-center gap-3 rounded-lg border border-[var(--border)] px-3 py-2.5">
+                          <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-[var(--primary)]/10 text-[var(--primary)] text-[10px] font-bold">
+                            {user.name.split(" ").map((n) => n[0]).join("").slice(0, 2).toUpperCase()}
                           </div>
-                        );
-                      })}
+                          <div className="flex-1 min-w-0">
+                            <span className="text-sm font-medium truncate block">{user.name}</span>
+                            <span className="text-xs text-[var(--muted-foreground)]">{user.email}</span>
+                          </div>
+                          <Badge className="text-[10px] shrink-0">{user.role}</Badge>
+                        </div>
+                      ))}
                     </div>
                   )}
                 </div>

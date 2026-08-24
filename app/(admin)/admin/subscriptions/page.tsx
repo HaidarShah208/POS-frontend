@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useAppDispatch } from "@/hooks/redux";
 import { logout, saveAuthToStorage } from "@/redux/api/auth/authSlice";
+import { baseApi } from "@/redux/api/baseApi";
 import { useGetOrganizationsQuery } from "@/redux/api/adminEndpoints";
 import { PageMotion } from "@/components/shared/PageMotion";
 import {
@@ -31,6 +32,7 @@ export default function SubscriptionsPage() {
 
   const handleLogout = () => {
     dispatch(logout());
+    dispatch(baseApi.util.resetApiState());
     saveAuthToStorage(null);
     router.push("/auth/login");
   };
