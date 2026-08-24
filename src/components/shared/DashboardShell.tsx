@@ -2,7 +2,9 @@
 
 import { useState, useEffect } from "react";
 import { usePathname, useRouter } from "next/navigation";
-import { useAppSelector } from "@/hooks/redux";
+import { useAppSelector, useAppDispatch } from "@/hooks/redux";
+import { setSubscription, saveAuthToStorage } from "@/redux/api/auth/authSlice";
+import { useGetMySubscriptionQuery } from "@/redux/api/subscriptionEndpoints";
 import { Sidebar } from "@/components/shared/Sidebar";
 import { Topbar } from "@/components/shared/Topbar";
 import { OfflineBanner } from "@/components/shared/OfflineBanner";
@@ -31,11 +33,33 @@ function loadCollapsed(): boolean {
 export function DashboardShell({ children }: { children: React.ReactNode }) {
   const router = useRouter();
   const pathname = usePathname();
+  const dispatch = useAppDispatch();
   const user = useAppSelector((s) => s.auth?.user);
+  const token = useAppSelector((s) => s.auth?.token);
   const rehydrated = useAppSelector((s) => s.auth?._rehydrated);
-  const subscription = useAppSelector((s) => s.auth?.subscription);
+  const storedSubscription = useAppSelector((s) => s.auth?.subscription);
+  const permissions = useAppSelector((s) => s.auth?.permissions);
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [collapsed, setCollapsed] = useState(false);
+
+  const isSuperAdmin = user?.role === "super_admin";
+  const { data: liveSub } = useGetMySubscriptionQuery(undefined, { skip: !user || isSuperAdmin, pollingInterval: 60000 });
+
+  const subscription = liveSub
+    ? { status: liveSub.status, planSlug: liveSub.plan?.slug ?? "", trialEndsAt: liveSub.trialEndsAt }
+    : storedSubscription;
+
+  useEffect(() => {
+    if (!liveSub || !user || !token || isSuperAdmin) return;
+    const newSub = { status: liveSub.status, planSlug: liveSub.plan?.slug ?? "", trialEndsAt: liveSub.trialEndsAt };
+    if (
+      storedSubscription?.status !== newSub.status ||
+      storedSubscription?.planSlug !== newSub.planSlug
+    ) {
+      dispatch(setSubscription(newSub));
+      saveAuthToStorage({ user, token, permissions, subscription: newSub });
+    }
+  }, [liveSub, user, token, isSuperAdmin, storedSubscription, dispatch, permissions]);
 
   useEffect(() => {
     setCollapsed(loadCollapsed());

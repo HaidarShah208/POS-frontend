@@ -27,7 +27,7 @@ import {
   Play, AlertTriangle, Pause, LogOut, Store,
   LayoutDashboard, CreditCard, Menu, X,
   CheckCircle2, XCircle, Clock, Eye, Banknote,
-  Smartphone, Building,
+  Smartphone, Building, Loader2,
 } from "lucide-react";
 
 const PAYMENT_STATUS_BADGE: Record<string, { variant: "success" | "warning" | "destructive" | "outline"; label: string }> = {
@@ -52,6 +52,7 @@ export default function AdminDashboard() {
   const [approvePayment, { isLoading: approving }] = useApprovePaymentMutation();
   const [rejectPayment, { isLoading: rejecting }] = useRejectPaymentMutation();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [loggingOut, setLoggingOut] = useState(false);
   const [viewReceipt, setViewReceipt] = useState<string | null>(null);
   const [rejectTarget, setRejectTarget] = useState<string | null>(null);
   const [rejectNotes, setRejectNotes] = useState("");
@@ -59,10 +60,13 @@ export default function AdminDashboard() {
   const payments = paymentsData?.data ?? [];
 
   const handleLogout = () => {
-    dispatch(logout());
-    dispatch(baseApi.util.resetApiState());
-    saveAuthToStorage(null);
-    router.push("/auth/login");
+    setLoggingOut(true);
+    setTimeout(() => {
+      dispatch(logout());
+      dispatch(baseApi.util.resetApiState());
+      saveAuthToStorage(null);
+      router.push("/auth/login");
+    }, 600);
   };
 
   const handleApprove = async (id: string) => {
@@ -103,8 +107,8 @@ export default function AdminDashboard() {
               <Link href="/admin/subscriptions" className="text-sm text-[var(--muted-foreground)] hover:text-[var(--foreground)] px-3 py-1.5 rounded-lg hover:bg-[var(--muted)]">
                 <CreditCard className="w-4 h-4 inline mr-1" />Subscriptions
               </Link>
-              <button onClick={handleLogout} className="flex items-center gap-1.5 text-sm text-red-500 hover:text-red-600 px-3 py-1.5 rounded-lg hover:bg-red-50">
-                <LogOut className="w-4 h-4" />
+              <button onClick={handleLogout} disabled={loggingOut} className="flex items-center gap-1.5 text-sm text-red-500 hover:text-red-600 px-3 py-1.5 rounded-lg hover:bg-red-50 disabled:opacity-50">
+                {loggingOut ? <Loader2 className="w-4 h-4 animate-spin" /> : <LogOut className="w-4 h-4" />}
               </button>
             </nav>
 
@@ -125,8 +129,9 @@ export default function AdminDashboard() {
               <Link href="/admin/subscriptions" onClick={() => setMobileMenuOpen(false)} className="flex items-center gap-2 text-sm text-[var(--muted-foreground)] px-3 py-2 rounded-lg hover:bg-[var(--muted)]">
                 <CreditCard className="w-4 h-4" />Subscriptions
               </Link>
-              <button onClick={handleLogout} className="flex items-center gap-2 text-sm text-red-500 px-3 py-2 rounded-lg hover:bg-red-50 w-full text-left">
-                <LogOut className="w-4 h-4" />Logout
+              <button onClick={handleLogout} disabled={loggingOut} className="flex items-center gap-2 text-sm text-red-500 px-3 py-2 rounded-lg hover:bg-red-50 w-full text-left disabled:opacity-50">
+                {loggingOut ? <Loader2 className="w-4 h-4 animate-spin" /> : <LogOut className="w-4 h-4" />}
+                {loggingOut ? "Logging out..." : "Logout"}
               </button>
             </div>
           )}

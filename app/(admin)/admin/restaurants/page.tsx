@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useRef, useEffect } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useAppDispatch, useAppSelector } from "@/hooks/redux";
@@ -13,12 +13,12 @@ import {
 import { PageMotion } from "@/components/shared/PageMotion";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
+import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import {
   Search, Store, Building2, LayoutDashboard, CreditCard,
   LogOut, Play, Pause, Ban, MoreVertical, ChevronLeft,
-  ChevronRight, Menu, X,
+  ChevronRight, Menu, X, Loader2,
 } from "lucide-react";
 
 const STATUS_BADGE: Record<string, { variant: "success" | "warning" | "destructive" | "outline"; label: string }> = {
@@ -38,6 +38,8 @@ export default function RestaurantsPage() {
   const [statusFilter, setStatusFilter] = useState("");
   const [actionMenuId, setActionMenuId] = useState<string | null>(null);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [loggingOut, setLoggingOut] = useState(false);
+  const menuRef = useRef<HTMLDivElement>(null);
 
   const { data, isLoading } = useGetOrganizationsQuery({
     page, limit: 10,
@@ -47,11 +49,25 @@ export default function RestaurantsPage() {
 
   const [updateStatus] = useUpdateOrganizationStatusMutation();
 
+  useEffect(() => {
+    if (!actionMenuId) return;
+    function handleClick(e: MouseEvent) {
+      if (menuRef.current && !menuRef.current.contains(e.target as Node)) {
+        setActionMenuId(null);
+      }
+    }
+    document.addEventListener("mousedown", handleClick);
+    return () => document.removeEventListener("mousedown", handleClick);
+  }, [actionMenuId]);
+
   const handleLogout = () => {
-    dispatch(logout());
-    dispatch(baseApi.util.resetApiState());
-    saveAuthToStorage(null);
-    router.push("/auth/login");
+    setLoggingOut(true);
+    setTimeout(() => {
+      dispatch(logout());
+      dispatch(baseApi.util.resetApiState());
+      saveAuthToStorage(null);
+      router.push("/auth/login");
+    }, 600);
   };
 
   const handleStatusChange = async (orgId: string, status: string) => {
@@ -78,8 +94,8 @@ export default function RestaurantsPage() {
               <Link href="/admin/subscriptions" className="text-sm text-[var(--muted-foreground)] hover:text-[var(--foreground)] px-3 py-1.5 rounded-lg hover:bg-[var(--muted)]">
                 <CreditCard className="w-4 h-4 inline mr-1" />Subscriptions
               </Link>
-              <button onClick={handleLogout} className="flex items-center gap-1.5 text-sm text-red-500 hover:text-red-600 px-3 py-1.5 rounded-lg hover:bg-red-50">
-                <LogOut className="w-4 h-4" />
+              <button onClick={handleLogout} disabled={loggingOut} className="flex items-center gap-1.5 text-sm text-red-500 hover:text-red-600 px-3 py-1.5 rounded-lg hover:bg-red-50 disabled:opacity-50">
+                {loggingOut ? <Loader2 className="w-4 h-4 animate-spin" /> : <LogOut className="w-4 h-4" />}
               </button>
             </nav>
             <button onClick={() => setMobileMenuOpen(!mobileMenuOpen)} className="md:hidden p-2 rounded-lg hover:bg-[var(--muted)]">
@@ -97,8 +113,9 @@ export default function RestaurantsPage() {
               <Link href="/admin/subscriptions" onClick={() => setMobileMenuOpen(false)} className="flex items-center gap-2 text-sm text-[var(--muted-foreground)] px-3 py-2 rounded-lg hover:bg-[var(--muted)]">
                 <CreditCard className="w-4 h-4" />Subscriptions
               </Link>
-              <button onClick={handleLogout} className="flex items-center gap-2 text-sm text-red-500 px-3 py-2 rounded-lg hover:bg-red-50 w-full text-left">
-                <LogOut className="w-4 h-4" />Logout
+              <button onClick={handleLogout} disabled={loggingOut} className="flex items-center gap-2 text-sm text-red-500 px-3 py-2 rounded-lg hover:bg-red-50 w-full text-left disabled:opacity-50">
+                {loggingOut ? <Loader2 className="w-4 h-4 animate-spin" /> : <LogOut className="w-4 h-4" />}
+                {loggingOut ? "Logging out..." : "Logout"}
               </button>
             </div>
           )}
@@ -113,7 +130,7 @@ export default function RestaurantsPage() {
             <p className="text-sm text-[var(--muted-foreground)] hidden sm:block">{user?.email}</p>
           </div>
 
-          <Card className="overflow-hidden">
+          <Card>
             <div className="p-3 sm:p-4 border-b border-[var(--border)] flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
               <div className="relative flex-1">
                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[var(--muted-foreground)]" />
@@ -146,7 +163,7 @@ export default function RestaurantsPage() {
               </div>
             ) : (
               <>
-                <div className="hidden md:block">
+                <div className="hidden md:block overflow-x-auto">
                   <table className="w-full">
                     <thead>
                       <tr className="border-b border-[var(--border)] text-left text-xs font-medium text-[var(--muted-foreground)] uppercase tracking-wider">
@@ -171,29 +188,45 @@ export default function RestaurantsPage() {
                             <td className="px-6 py-4 text-sm text-[var(--muted-foreground)]">{org.subscription?.plan?.name || "—"}</td>
                             <td className="px-6 py-4 text-sm text-[var(--muted-foreground)]">{String((org as unknown as Record<string, unknown>).userCount ?? "—")}</td>
                             <td className="px-6 py-4 text-sm text-[var(--muted-foreground)]">{new Date(org.createdAt).toLocaleDateString()}</td>
-                            <td className="px-6 py-4 text-right relative">
-                              <button onClick={() => setActionMenuId(actionMenuId === org.id ? null : org.id)} className="p-1.5 rounded-lg hover:bg-[var(--muted)]">
-                                <MoreVertical className="w-4 h-4" />
-                              </button>
-                              {actionMenuId === org.id && (
-                                <div className="absolute right-6 top-full mt-1 w-48 bg-[var(--card)] rounded-xl border border-[var(--border)] shadow-lg z-10 py-1">
-                                  {org.status !== "active" && (
-                                    <button onClick={() => handleStatusChange(org.id, "active")} className="w-full px-4 py-2 text-left text-sm hover:bg-[var(--muted)] flex items-center gap-2 text-emerald-600">
-                                      <Play className="w-4 h-4" />Activate
-                                    </button>
-                                  )}
-                                  {org.status !== "suspended" && (
-                                    <button onClick={() => handleStatusChange(org.id, "suspended")} className="w-full px-4 py-2 text-left text-sm hover:bg-[var(--muted)] flex items-center gap-2 text-amber-600">
-                                      <Pause className="w-4 h-4" />Suspend
-                                    </button>
-                                  )}
-                                  {org.status !== "inactive" && (
-                                    <button onClick={() => handleStatusChange(org.id, "inactive")} className="w-full px-4 py-2 text-left text-sm hover:bg-[var(--muted)] flex items-center gap-2 text-red-600">
-                                      <Ban className="w-4 h-4" />Deactivate
-                                    </button>
-                                  )}
-                                </div>
-                              )}
+                            <td className="px-6 py-4 text-right">
+                              <div className="relative inline-block" ref={actionMenuId === org.id ? menuRef : undefined}>
+                                <button onClick={() => setActionMenuId(actionMenuId === org.id ? null : org.id)} className="p-1.5 rounded-lg hover:bg-[var(--muted)]">
+                                  <MoreVertical className="w-4 h-4" />
+                                </button>
+                                {actionMenuId === org.id && (
+                                  <div className="fixed z-50 w-48 bg-[var(--card)] rounded-xl border border-[var(--border)] shadow-lg py-1"
+                                    ref={(el) => {
+                                      if (!el) return;
+                                      const btn = el.parentElement?.querySelector("button");
+                                      if (!btn) return;
+                                      const rect = btn.getBoundingClientRect();
+                                      const menuH = el.offsetHeight;
+                                      const spaceBelow = window.innerHeight - rect.bottom - 8;
+                                      const top = spaceBelow >= menuH
+                                        ? rect.bottom + 4
+                                        : rect.top - menuH - 4;
+                                      el.style.top = `${Math.max(8, top)}px`;
+                                      el.style.left = `${rect.right - el.offsetWidth}px`;
+                                    }}
+                                  >
+                                    {org.status !== "active" && (
+                                      <button onClick={() => handleStatusChange(org.id, "active")} className="w-full px-4 py-2 text-left text-sm hover:bg-[var(--muted)] flex items-center gap-2 text-emerald-600">
+                                        <Play className="w-4 h-4" />Activate
+                                      </button>
+                                    )}
+                                    {org.status !== "suspended" && (
+                                      <button onClick={() => handleStatusChange(org.id, "suspended")} className="w-full px-4 py-2 text-left text-sm hover:bg-[var(--muted)] flex items-center gap-2 text-amber-600">
+                                        <Pause className="w-4 h-4" />Suspend
+                                      </button>
+                                    )}
+                                    {org.status !== "inactive" && (
+                                      <button onClick={() => handleStatusChange(org.id, "inactive")} className="w-full px-4 py-2 text-left text-sm hover:bg-[var(--muted)] flex items-center gap-2 text-red-600">
+                                        <Ban className="w-4 h-4" />Deactivate
+                                      </button>
+                                    )}
+                                  </div>
+                                )}
+                              </div>
                             </td>
                           </tr>
                         );

@@ -17,6 +17,7 @@ import {
   ChevronRight,
   LogOut,
   Zap,
+  Loader2,
 } from "lucide-react";
 
 const BREADCRUMB_LABELS: Record<string, string> = {
@@ -51,6 +52,7 @@ export function Topbar({ onMenuClick, collapsed, onToggleCollapse }: TopbarProps
   const dispatch = useAppDispatch();
   const user = useAppSelector((s) => s.auth?.user);
   const [profileOpen, setProfileOpen] = useState(false);
+  const [loggingOut, setLoggingOut] = useState(false);
   const profileRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -63,10 +65,13 @@ export function Topbar({ onMenuClick, collapsed, onToggleCollapse }: TopbarProps
   }, []);
 
   const handleLogout = () => {
-    dispatch(logout());
-    dispatch(baseApi.util.resetApiState());
-    saveAuthToStorage(null);
-    router.push("/auth/login");
+    setLoggingOut(true);
+    setTimeout(() => {
+      dispatch(logout());
+      dispatch(baseApi.util.resetApiState());
+      saveAuthToStorage(null);
+      router.push("/auth/login");
+    }, 600);
   };
 
   const segments = pathname.split("/").filter(Boolean);
@@ -174,12 +179,14 @@ export function Topbar({ onMenuClick, collapsed, onToggleCollapse }: TopbarProps
                 <button
                   className={cn(
                     "flex items-center gap-2 w-full text-left px-4 py-2 text-sm text-[var(--destructive)]",
-                    "hover:bg-[var(--muted)] transition-colors"
+                    "hover:bg-[var(--muted)] transition-colors",
+                    loggingOut && "opacity-60 pointer-events-none"
                   )}
                   onClick={handleLogout}
+                  disabled={loggingOut}
                 >
-                  <LogOut className="h-4 w-4" />
-                  Logout
+                  {loggingOut ? <Loader2 className="h-4 w-4 animate-spin" /> : <LogOut className="h-4 w-4" />}
+                  {loggingOut ? "Logging out..." : "Logout"}
                 </button>
               </div>
             </div>
