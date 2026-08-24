@@ -55,6 +55,28 @@ export interface Category {
   updatedAt?: string;
 }
 
+export type InventoryItemType = "PRODUCT" | "INGREDIENT" | "PACKAGING";
+export type InventoryItemUnit = "PCS" | "KG" | "G" | "L" | "ML" | "BOX" | "PACK";
+export type InventoryItemStatus = "IN_STOCK" | "LOW_STOCK" | "OUT_OF_STOCK";
+
+export interface NewInventoryItem {
+  id: string;
+  organizationId: string;
+  productId: string | null;
+  name: string;
+  type: InventoryItemType;
+  unit: InventoryItemUnit;
+  currentQuantity: number;
+  minimumQuantity: number;
+  costPerUnit: number;
+  status: InventoryItemStatus;
+  trackInventory: boolean;
+  trackExpiry: boolean;
+  product?: Product | null;
+  createdAt: string;
+  updatedAt: string;
+}
+
 export interface InventoryItem {
   id: string;
   productId: string;
@@ -77,18 +99,187 @@ export interface InventoryItem {
   updatedAt?: string;
 }
 
-export type StockMovementType = "purchase" | "sale" | "adjustment" | "transfer" | "waste" | "return" | "damaged";
+export type StockMovementType =
+  | "OPENING_STOCK"
+  | "SALE"
+  | "PURCHASE"
+  | "RETURN"
+  | "DAMAGE"
+  | "WASTAGE"
+  | "EXPIRED"
+  | "MANUAL_ADJUSTMENT"
+  | "STOCK_CORRECTION"
+  | "RECIPE_DEDUCTION";
+
+export type StockMovementReferenceType = "ORDER" | "PURCHASE_ORDER" | "MANUAL" | "SYSTEM" | "WASTE";
 
 export interface StockMovement {
   id: string;
-  productId: string;
-  productName: string;
+  organizationId: string;
+  inventoryItemId: string;
   type: StockMovementType;
   quantity: number;
-  balanceAfter: number;
-  reason?: string;
-  reference?: string;
+  previousQuantity: number;
+  newQuantity: number;
+  reason: string | null;
+  referenceType: StockMovementReferenceType | null;
+  referenceId: string | null;
+  performedById: string | null;
+  notes: string | null;
   createdAt: string;
+  inventoryItem?: NewInventoryItem;
+  performedBy?: { id: string; name: string; email: string } | null;
+}
+
+export interface InventorySummary {
+  totalItems: number;
+  lowStock: number;
+  outOfStock: number;
+  totalValue: number;
+  expiringSoon: number;
+}
+
+export type WasteReason = "DAMAGED" | "EXPIRED" | "SPILLED" | "BURNED" | "SPOILED" | "OTHER";
+
+export interface WasteRecord {
+  id: string;
+  organizationId: string;
+  inventoryItemId: string;
+  quantity: number;
+  reason: WasteReason;
+  notes: string | null;
+  recordedById: string | null;
+  createdAt: string;
+  inventoryItem?: NewInventoryItem;
+  recordedBy?: { id: string; name: string } | null;
+}
+
+export interface RecipeIngredient {
+  id: string;
+  recipeId: string;
+  inventoryItemId: string;
+  quantity: number;
+  unit: string;
+  inventoryItem?: NewInventoryItem;
+}
+
+export interface Recipe {
+  id: string;
+  organizationId: string;
+  productId: string;
+  name: string;
+  isActive: boolean;
+  estimatedCost: number;
+  createdAt: string;
+  updatedAt: string;
+  product?: Product;
+  ingredients?: RecipeIngredient[];
+}
+
+export type PurchaseOrderStatus = "DRAFT" | "SENT" | "PARTIAL" | "RECEIVED" | "CANCELLED";
+
+export interface PurchaseOrderItem {
+  id: string;
+  purchaseOrderId: string;
+  inventoryItemId: string;
+  orderedQuantity: number;
+  receivedQuantity: number;
+  unitCost: number;
+  totalCost: number;
+  inventoryItem?: NewInventoryItem;
+}
+
+export interface PurchaseOrder {
+  id: string;
+  organizationId: string;
+  supplierId: string | null;
+  orderNumber: string;
+  status: PurchaseOrderStatus;
+  totalAmount: number;
+  notes: string | null;
+  expectedDate: string | null;
+  receivedDate: string | null;
+  createdAt: string;
+  updatedAt: string;
+  supplier?: Supplier | null;
+  items?: PurchaseOrderItem[];
+}
+
+export interface GetNewInventoryParams {
+  page?: number;
+  limit?: number;
+  type?: InventoryItemType;
+  status?: InventoryItemStatus;
+  search?: string;
+  sortBy?: string;
+  sortOrder?: "ASC" | "DESC";
+}
+
+export interface GetStockMovementsParams {
+  inventoryItemId?: string;
+  type?: StockMovementType;
+  referenceType?: StockMovementReferenceType;
+  page?: number;
+  limit?: number;
+  dateFrom?: string;
+  dateTo?: string;
+}
+
+export interface AdjustStockInput {
+  inventoryItemId: string;
+  type: "add" | "remove";
+  quantity: number;
+  reason: string;
+  notes?: string;
+}
+
+export interface RecordWasteInput {
+  inventoryItemId: string;
+  quantity: number;
+  reason: WasteReason;
+  notes?: string;
+}
+
+export interface CreateRecipeInput {
+  productId: string;
+  name: string;
+  ingredients: { inventoryItemId: string; quantity: number; unit: string }[];
+}
+
+export interface UpdateRecipeInput {
+  name?: string;
+  isActive?: boolean;
+  ingredients?: { inventoryItemId: string; quantity: number; unit: string }[];
+}
+
+export interface CreateInventoryItemInput {
+  name: string;
+  type: InventoryItemType;
+  unit: InventoryItemUnit;
+  productId?: string;
+  currentQuantity?: number;
+  minimumQuantity?: number;
+  costPerUnit?: number;
+  trackInventory?: boolean;
+  trackExpiry?: boolean;
+}
+
+export interface GetPurchaseOrdersParams {
+  page?: number;
+  limit?: number;
+  status?: PurchaseOrderStatus;
+  supplierId?: string;
+}
+
+export interface CreatePurchaseOrderInput {
+  supplierId?: string;
+  notes?: string;
+  expectedDate?: string;
+  items: { inventoryItemId: string; orderedQuantity: number; unitCost: number }[];
+}
+
+export interface ReceiveItemsInput {
+  items: { purchaseOrderItemId: string; receivedQuantity: number }[];
 }
 
 export interface OrderItem {
@@ -132,42 +323,6 @@ export interface Order {
   items?: OrderItem[];
   branch?: Branch;
   user?: User | null;
-}
-
-export type CustomerStatus = "active" | "inactive" | "vip";
-
-export interface Customer {
-  id: string;
-  name: string;
-  email?: string;
-  phone?: string;
-  address?: string;
-  notes?: string;
-  status?: CustomerStatus;
-  totalOrders?: number;
-  totalSpent?: number;
-  lastOrderAt?: string;
-  loyaltyPoints?: number;
-  tags?: string[];
-  createdAt?: string;
-  updatedAt?: string;
-}
-
-export interface CustomerOrder {
-  id: string;
-  orderNumber: string;
-  grandTotal: number;
-  status: OrderStatus;
-  orderType: OrderType;
-  itemCount: number;
-  createdAt: string;
-}
-
-export interface GetCustomersParams {
-  page?: number;
-  limit?: number;
-  search?: string;
-  status?: CustomerStatus;
 }
 
 export interface AuthResponse {

@@ -332,11 +332,12 @@ export default function StaffPage() {
 
         <ConfirmDialog
           open={!!deleteTarget}
+          onOpenChange={(o) => { if (!o) setDeleteTarget(null); }}
           title="Remove Staff Member"
           description={`Are you sure you want to remove "${deleteTarget?.name}"? They will no longer be able to log in.`}
           confirmLabel="Remove"
+          variant="destructive"
           onConfirm={handleDelete}
-          onCancel={() => setDeleteTarget(null)}
         />
       </PageMotion>
     </RoleGuard>

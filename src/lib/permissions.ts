@@ -11,15 +11,13 @@ export type Permission =
   | "reports"
   | "staff"
   | "dashboard"
-  | "floor"
-  | "customers"
-  | "loyalty"
   | "suppliers"
   | "purchase_orders"
   | "cash_register"
   | "employees"
   | "roles"
   | "analytics"
+  | "subscription"
   | "admin_panel";
 
 export const ALL_PERMISSIONS: { id: Permission; label: string; group: string }[] = [
@@ -31,14 +29,12 @@ export const ALL_PERMISSIONS: { id: Permission; label: string; group: string }[]
   { id: "inventory", label: "Inventory", group: "Catalog" },
   { id: "suppliers", label: "Suppliers", group: "Catalog" },
   { id: "purchase_orders", label: "Purchase Orders", group: "Catalog" },
-  { id: "floor", label: "Floor Plan", group: "Operations" },
-  { id: "customers", label: "Customers", group: "Operations" },
-  { id: "loyalty", label: "Loyalty", group: "Operations" },
   { id: "cash_register", label: "Cash Register", group: "Operations" },
   { id: "employees", label: "Staff", group: "Management" },
   { id: "reports", label: "Reports", group: "Management" },
   { id: "analytics", label: "Analytics", group: "Management" },
   { id: "roles", label: "Roles & Permissions", group: "Management" },
+  { id: "subscription", label: "Subscription", group: "Management" },
   { id: "settings", label: "Settings", group: "Management" },
   { id: "online_orders", label: "Online Orders", group: "Management" },
   { id: "staff", label: "Staff", group: "Management" },
@@ -47,9 +43,9 @@ export const ALL_PERMISSIONS: { id: Permission; label: string; group: string }[]
 
 const FALLBACK_ROLE_PERMISSIONS: Record<string, Permission[]> = {
   super_admin: ["admin_panel", "dashboard"],
-  owner: ALL_PERMISSIONS.filter((p) => p.id !== "admin_panel").map((p) => p.id),
-  admin: ALL_PERMISSIONS.filter((p) => p.id !== "admin_panel").map((p) => p.id),
-  cashier: ["dashboard", "pos", "orders", "floor", "customers", "loyalty", "cash_register"],
+  owner: ALL_PERMISSIONS.filter((p) => p.id !== "admin_panel").map((p) => p.id) as Permission[],
+  admin: ALL_PERMISSIONS.filter((p) => p.id !== "admin_panel" && p.id !== "subscription").map((p) => p.id) as Permission[],
+  cashier: ["dashboard", "pos", "orders", "cash_register"],
   kitchen: ["kitchen"],
 };
 
@@ -72,14 +68,12 @@ const ALL_NAV: NavItem[] = [
   { href: "/reports", label: "Reports", permission: "reports" },
   { href: "/analytics", label: "Analytics", permission: "analytics" },
   { href: "/orders", label: "Orders", permission: "orders" },
-  { href: "/floor", label: "Floor Plan", permission: "floor" },
-  { href: "/customers", label: "Customers", permission: "customers" },
-  { href: "/loyalty", label: "Loyalty", permission: "loyalty" },
   { href: "/suppliers", label: "Suppliers", permission: "suppliers" },
   { href: "/purchase-orders", label: "Purchase Orders", permission: "purchase_orders" },
   { href: "/cash-register", label: "Cash Register", permission: "cash_register" },
   { href: "/employees", label: "Staff", permission: "employees" },
   { href: "/roles", label: "Roles", permission: "roles" },
+  { href: "/subscription", label: "Subscription", permission: "subscription" },
   { href: "/settings", label: "Settings", permission: "settings" },
 ];
 

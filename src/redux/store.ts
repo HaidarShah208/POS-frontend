@@ -6,16 +6,16 @@ import "./api/productsEndpoints";
 import "./api/inventoryEndpoints";
 import "./api/ordersEndpoints";
 import "./api/branchesEndpoints";
-import "./api/customersEndpoints";
 import "./api/suppliersEndpoints";
 import "./api/adminEndpoints";
 import "./api/rolesEndpoints";
 import "./api/usersEndpoints";
+import "./api/recipesEndpoints";
+import "./api/purchaseOrdersEndpoints";
+import "./api/subscriptionEndpoints";
 import { cartApi } from "./api/cart";
 import { authReducer } from "./api/auth";
 import { settingsReducer } from "./slices/settingsSlice";
-import { floorReducer } from "./slices/floorSlice";
-import { loyaltyReducer } from "./slices/loyaltySlice";
 import { purchaseOrderReducer } from "./slices/purchaseOrderSlice";
 import { cashRegisterReducer } from "./slices/cashRegisterSlice";
 import { rolesReducer } from "./slices/rolesSlice";
@@ -25,8 +25,6 @@ export const store = configureStore({
   reducer: {
     auth: authReducer,
     settings: settingsReducer,
-    floor: floorReducer,
-    loyalty: loyaltyReducer,
     purchaseOrders: purchaseOrderReducer,
     cashRegister: cashRegisterReducer,
     roles: rolesReducer,

@@ -14,7 +14,6 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { useGetOrdersQuery } from "@/redux/api/ordersEndpoints";
 import { useGetInventoryQuery } from "@/redux/api/inventoryEndpoints";
-import { useGetCustomersQuery } from "@/redux/api/customersEndpoints";
 import { useGetBranchesQuery } from "@/redux/api/branchesEndpoints";
 import { useGetOrgUsersQuery } from "@/redux/api/usersEndpoints";
 import { cn, formatCurrency } from "@/lib/utils";
@@ -25,7 +24,7 @@ import {
   ArrowUpRight, ArrowDownRight, Percent,
 } from "lucide-react";
 
-type ViewTab = "overview" | "sales" | "customers" | "inventory" | "staff";
+type ViewTab = "overview" | "sales" | "inventory" | "staff";
 
 const DATE_PRESETS = [
   { label: "7d", days: 7 },
@@ -162,12 +161,10 @@ export default function AnalyticsPage() {
   const dateToExclusive = useMemo(() => addDay(endDate), [endDate]);
   const { data: ordersRes, isLoading } = useGetOrdersQuery({ dateFrom: startDate, dateTo: dateToExclusive, limit: 5000, ...(selectedBranch ? { branchId: selectedBranch } : {}) });
   const { data: inventoryRes } = useGetInventoryQuery();
-  const { data: customersData } = useGetCustomersQuery({});
   const { data: staffUsers = [] } = useGetOrgUsersQuery();
 
   const orders = ordersRes?.data ?? [];
   const inventory = inventoryRes?.data ?? [];
-  const customers = customersData ?? [];
   const a = useMemo(() => computeAnalytics(orders), [orders]);
   const maxDayRev = Math.max(...a.dailyData.map((d) => d.revenue), 1);
   const maxHourCount = Math.max(...a.filteredHours.map((h) => h.count), 1);
@@ -188,13 +185,6 @@ export default function AnalyticsPage() {
     return { total: staffUsers.length, admins: roleCounts["admin"] ?? 0, cashiers: roleCounts["cashier"] ?? 0, kitchen: roleCounts["kitchen"] ?? 0 };
   }, [staffUsers]);
 
-  const custStats = useMemo(() => ({
-    total: customers.length,
-    active: customers.filter((c) => c.status === "active").length,
-    vip: customers.filter((c) => c.status === "vip").length,
-    totalSpent: customers.reduce((s, c) => s + (c.totalSpent ?? 0), 0),
-  }), [customers]);
-
   const applyPreset = (days: number) => {
     const now = new Date();
     setEndDate(toDateStr(now));
@@ -206,7 +196,6 @@ export default function AnalyticsPage() {
   const VIEW_TABS: { id: ViewTab; label: string; icon: React.ReactNode }[] = [
     { id: "overview", label: "Overview", icon: <PieChart className="h-4 w-4" /> },
     { id: "sales", label: "Sales", icon: <TrendingUp className="h-4 w-4" /> },
-    { id: "customers", label: "Customers", icon: <Users className="h-4 w-4" /> },
     { id: "inventory", label: "Inventory", icon: <Warehouse className="h-4 w-4" /> },
     { id: "staff", label: "Staff", icon: <Activity className="h-4 w-4" /> },
   ];
@@ -415,60 +404,6 @@ export default function AnalyticsPage() {
                 </>
               )}
             </ChartCard>
-          </>
-        )}
-
-        {viewTab === "customers" && (
-          <>
-            <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-              <StatsCard title="Total Customers" value={custStats.total} animate icon={<Users className="h-5 w-5" />} />
-              <StatsCard title="Active" value={custStats.active} animate icon={<Activity className="h-5 w-5" />} />
-              <StatsCard title="VIP" value={custStats.vip} animate icon={<Target className="h-5 w-5" />} />
-              <StatsCard title="Total Spent" value={formatCurrency(custStats.totalSpent)} icon={<DollarSign className="h-5 w-5" />} />
-            </div>
-            <Card>
-              <CardContent className="p-0">
-                <div className="border-b border-[var(--border)] px-4 py-3">
-                  <h3 className="text-sm font-semibold">Customer Insights</h3>
-                  <p className="text-xs text-[var(--muted-foreground)]">Top customers by spending</p>
-                </div>
-                <div className="p-4">
-                  {customers.length === 0 ? (
-                    <EmptyState title="No customer data" description="Customer analytics will appear here." icon={<Users className="h-6 w-6" />} />
-                  ) : (
-                    <div className="space-y-2">
-                      {[...customers]
-                        .sort((a, b) => (b.totalSpent ?? 0) - (a.totalSpent ?? 0))
-                        .slice(0, 10)
-                        .map((c, i) => {
-                          const maxSpent = Math.max(...customers.map((cu) => cu.totalSpent ?? 0), 1);
-                          return (
-                            <div key={c.id} className="flex items-center gap-3 rounded-lg border border-[var(--border)] px-3 py-2.5">
-                              <span className="text-xs font-bold text-[var(--muted-foreground)] w-5 text-right tabular-nums">{i + 1}</span>
-                              <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-[var(--primary)]/10 text-[var(--primary)] text-[10px] font-bold">
-                                {c.name.split(" ").map((n) => n[0]).join("").slice(0, 2).toUpperCase()}
-                              </div>
-                              <div className="flex-1 min-w-0">
-                                <div className="flex items-center gap-2">
-                                  <span className="text-sm font-medium truncate">{c.name}</span>
-                                  {c.status === "vip" && <Badge className="text-[10px] bg-amber-100 text-amber-700">VIP</Badge>}
-                                </div>
-                                <div className="h-1 rounded-full bg-[var(--muted)] overflow-hidden mt-1">
-                                  <div className="h-full rounded-full bg-[var(--primary)]" style={{ width: `${((c.totalSpent ?? 0) / maxSpent) * 100}%` }} />
-                                </div>
-                              </div>
-                              <div className="text-right shrink-0">
-                                <span className="text-sm font-bold tabular-nums">{formatCurrency(c.totalSpent ?? 0)}</span>
-                                <p className="text-[10px] text-[var(--muted-foreground)]">{c.totalOrders ?? 0} orders</p>
-                              </div>
-                            </div>
-                          );
-                      })}
-                    </div>
-                  )}
-                </div>
-              </CardContent>
-            </Card>
           </>
         )}
 
