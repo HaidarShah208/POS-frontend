@@ -21,7 +21,7 @@ import { Input } from "@/components/ui/input";
 import {
   Modal, ModalContent, ModalHeader, ModalTitle, ModalFooter, ModalClose,
 } from "@/components/ui/modal";
-import { formatCurrency } from "@/lib/utils";
+import { formatCurrency, resolveReceiptUrl } from "@/lib/utils";
 import {
   Building2, Users, ShoppingCart, DollarSign,
   Play, AlertTriangle, Pause, LogOut, Store,
@@ -223,7 +223,7 @@ export default function AdminDashboard() {
                           <div className="flex items-center gap-2 shrink-0">
                             {p.receiptImage && (
                               <Button variant="outline" size="sm" className="h-8 gap-1 text-xs"
-                                onClick={() => setViewReceipt(`${backendUrl}/api/files/receipt/${p.receiptImage}`)}>
+                                onClick={() => setViewReceipt(resolveReceiptUrl(p.receiptImage!, backendUrl))}>
                                 <Eye className="h-3 w-3" />Receipt
                               </Button>
                             )}

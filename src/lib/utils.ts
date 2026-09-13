@@ -26,3 +26,13 @@ export function formatCurrency(value: number): string {
     maximumFractionDigits: 2,
   }).format(value);
 }
+
+/**
+ * Payment receipts are now stored on Supabase Storage and returned as full
+ * URLs. Older records (uploaded before that migration) only have a bare
+ * filename served from the backend's local-disk route.
+ */
+export function resolveReceiptUrl(receiptImage: string, backendUrl: string): string {
+  if (/^https?:\/\//i.test(receiptImage)) return receiptImage;
+  return `${backendUrl}/api/files/receipt/${receiptImage}`;
+}

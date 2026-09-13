@@ -117,6 +117,7 @@ function SettingRow({
 export function SettingsView() {
   const dispatch = useAppDispatch();
   const settings = useAppSelector((s) => s.settings);
+  const authToken = useAppSelector((s) => s.auth.token);
   const [activeTab, setActiveTab] = useState<TabId>("general");
   const [saved, setSaved] = useState(false);
   const [dirty, setDirty] = useState(false);
@@ -147,13 +148,13 @@ export function SettingsView() {
         const uploadUrl = apiBase ? `${apiBase}/api/uploads/logo` : "/api/uploads/logo";
         const res = await fetch(uploadUrl, {
           method: "POST",
+          headers: authToken ? { Authorization: `Bearer ${authToken}` } : undefined,
           body: formData,
         });
         if (res.ok) {
-          const json = (await res.json()) as { filename?: string };
-          if (json.filename) {
-            const logoUrl = apiBase ? `${apiBase}/api/files/logo/${json.filename}` : `/api/files/logo/${json.filename}`;
-            dispatch(setReceipt({ logoUrl }));
+          const json = (await res.json()) as { url?: string };
+          if (json.url) {
+            dispatch(setReceipt({ logoUrl: json.url }));
           }
           setPendingLogoFile(null);
         } else {

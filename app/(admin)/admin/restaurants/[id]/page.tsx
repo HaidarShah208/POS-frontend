@@ -21,7 +21,7 @@ import { Input } from "@/components/ui/input";
 import {
   Modal, ModalContent, ModalHeader, ModalTitle, ModalFooter, ModalClose,
 } from "@/components/ui/modal";
-import { formatCurrency } from "@/lib/utils";
+import { formatCurrency, resolveReceiptUrl } from "@/lib/utils";
 import {
   ArrowLeft, Building2, Users, ShoppingCart, DollarSign,
   CreditCard, Clock, CheckCircle2, XCircle, Eye,
@@ -282,7 +282,7 @@ export default function RestaurantDetailPage({ params }: { params: Promise<{ id:
                             <div className="flex gap-1.5">
                               {p.receiptImage && (
                                 <Button variant="outline" size="sm" className="h-8 gap-1 text-xs"
-                                  onClick={() => setViewReceipt(`${backendUrl}/api/files/receipt/${p.receiptImage}`)}>
+                                  onClick={() => setViewReceipt(resolveReceiptUrl(p.receiptImage!, backendUrl))}>
                                   <Eye className="h-3 w-3" />Receipt
                                 </Button>
                               )}
