@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";
 import { PageMotion } from "@/components/shared/PageMotion";
@@ -25,8 +26,10 @@ import { formatCurrency } from "@/lib/utils";
 import {
   Crown, Check, Zap, Shield, Rocket, Upload,
   CreditCard, Clock, CheckCircle2, XCircle, AlertTriangle, Loader2,
-  Smartphone, Building2, Banknote,
 } from "lucide-react";
+import easypaisaLogo from "@/assets/Easypaisa-logo.png";
+import jazzcashLogo from "@/assets/new-Jazzcash-logo.png";
+import meezanLogo from "@/assets/meezan-bank-logo.png";
 
 type FlowStep = "plans" | "payment" | "pending";
 type PaymentMethodType = "EASYPAISA" | "JAZZCASH" | "BANK_TRANSFER";
@@ -45,11 +48,27 @@ const PLAN_COLORS: Record<string, string> = {
   free_trial: "from-slate-400 to-slate-500",
 };
 
-const PAYMENT_METHODS: { id: PaymentMethodType; name: string; icon: React.ReactNode; color: string; details: string }[] = [
-  { id: "EASYPAISA", name: "EasyPaisa", icon: <Smartphone className="h-6 w-6" />, color: "bg-green-50 border-green-200 hover:border-green-400", details: "Account: 03XX-XXXXXXX" },
-  { id: "JAZZCASH", name: "JazzCash", icon: <Smartphone className="h-6 w-6" />, color: "bg-red-50 border-red-200 hover:border-red-400", details: "Account: 03XX-XXXXXXX" },
-  { id: "BANK_TRANSFER", name: "Bank Transfer", icon: <Building2 className="h-6 w-6" />, color: "bg-blue-50 border-blue-200 hover:border-blue-400", details: "Bank: HBL | Account: XXXX-XXXXXXXX" },
+const PAYMENT_METHODS: { id: PaymentMethodType; name: string; logo: typeof easypaisaLogo }[] = [
+  { id: "EASYPAISA", name: "Easypaisa", logo: easypaisaLogo },
+  { id: "JAZZCASH", name: "JazzCash", logo: jazzcashLogo },
+  { id: "BANK_TRANSFER", name: "Meezan Bank", logo: meezanLogo },
 ];
+
+const PAYMENT_ACCOUNT_DETAILS: Record<PaymentMethodType, { label: string; value: string }[]> = {
+  EASYPAISA: [
+    { label: "Account number", value: "0310-7580073" },
+    { label: "Account name", value: "Ali Haidar — Easypaisa" },
+  ],
+  JAZZCASH: [
+    { label: "Account number", value: "0307-9732429" },
+    { label: "Account name", value: "Ali Haidar — JazzCash" },
+  ],
+  BANK_TRANSFER: [
+    { label: "Account holder", value: "Ali Haidar — Meezan Bank" },
+    { label: "Account no.", value: "02750113164681" },
+    { label: "IBAN", value: "PK44MEZN0002750113164681" },
+  ],
+};
 
 const DEFAULT_FEATURES: Record<string, string[]> = {
   starter: ["Up to 1 branch", "Up to 5 staff members", "Basic POS features", "Email support"],
@@ -74,7 +93,7 @@ export default function SubscriptionPage() {
   const initialStep: FlowStep = isAlreadyPending ? "pending" : isActive ? "plans" : "plans";
   const [step, setStep] = useState<FlowStep>(initialStep);
   const [selectedPlanId, setSelectedPlanId] = useState<string>("");
-  const [paymentMethod, setPaymentMethod] = useState<PaymentMethodType | null>(null);
+  const [paymentMethod, setPaymentMethod] = useState<PaymentMethodType | null>("EASYPAISA");
   const [accountTitle, setAccountTitle] = useState("");
   const [transactionId, setTransactionId] = useState("");
   const [receiptFile, setReceiptFile] = useState<File | null>(null);
@@ -87,7 +106,7 @@ export default function SubscriptionPage() {
     if (isActive) return;
     setSelectedPlanId(planId);
     setStep("payment");
-    setPaymentMethod(null);
+    setPaymentMethod("EASYPAISA");
     setAccountTitle("");
     setTransactionId("");
     setReceiptFile(null);
@@ -226,35 +245,36 @@ export default function SubscriptionPage() {
                 <Card>
                   <CardContent className="p-5">
                     <h3 className="text-sm font-semibold mb-3">Payment Method</h3>
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+                    <div className="grid grid-cols-3 gap-3">
                       {PAYMENT_METHODS.map((pm) => (
                         <button
                           key={pm.id}
                           onClick={() => { setPaymentMethod(pm.id); setErrors({ ...errors, method: "" }); }}
-                          className={`relative p-3 sm:p-4 rounded-xl border-2 transition-all ${
+                          className={`flex flex-col items-center gap-2 rounded-xl border p-4 transition-all ${
                             paymentMethod === pm.id
-                              ? "border-[var(--primary)] bg-[var(--primary)]/5 shadow-sm"
-                              : "border-[var(--border)] hover:border-[var(--primary)]/30"
+                              ? "border-[var(--foreground)] bg-[var(--muted)]/50"
+                              : "border-[var(--border)] hover:border-[var(--foreground)]/30"
                           }`}
                         >
-                          <div className="flex flex-col items-center gap-1.5 text-center">
-                            <div className={`w-10 h-10 rounded-lg flex items-center justify-center ${
-                              pm.id === "EASYPAISA" ? "bg-green-100 text-green-600" :
-                              pm.id === "JAZZCASH" ? "bg-red-100 text-red-600" :
-                              "bg-blue-100 text-blue-600"
-                            }`}>
-                              {pm.icon}
-                            </div>
-                            <span className="font-medium text-xs sm:text-sm">{pm.name}</span>
-                            <span className="text-[9px] sm:text-[10px] text-[var(--muted-foreground)] leading-tight">{pm.details}</span>
+                          <div className="h-10 w-10 relative shrink-0">
+                            <Image src={pm.logo} alt={pm.name} fill className="object-contain" />
                           </div>
-                          {paymentMethod === pm.id && (
-                            <CheckCircle2 className="absolute top-1.5 right-1.5 h-4 w-4 text-[var(--primary)]" />
-                          )}
+                          <span className="font-medium text-xs sm:text-sm">{pm.name}</span>
                         </button>
                       ))}
                     </div>
                     {errors.method && <p className="text-xs text-red-500 mt-2">{errors.method}</p>}
+
+                    {paymentMethod && (
+                      <div className="mt-4 rounded-xl bg-[var(--muted)]/40 p-4 space-y-2">
+                        {PAYMENT_ACCOUNT_DETAILS[paymentMethod].map((row) => (
+                          <div key={row.label} className="flex items-center justify-between text-sm gap-4">
+                            <span className="text-[var(--muted-foreground)]">{row.label}</span>
+                            <span className="font-semibold text-right">{row.value}</span>
+                          </div>
+                        ))}
+                      </div>
+                    )}
                   </CardContent>
                 </Card>
 
