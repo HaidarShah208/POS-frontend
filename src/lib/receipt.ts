@@ -17,6 +17,7 @@ export function buildReceiptHtml(order: Order, settings: SettingsState, summary?
   const dateStr = `${String(createdAt.getDate()).padStart(2, "0")}-${String(createdAt.getMonth() + 1).padStart(2, "0")}-${createdAt.getFullYear()}`;
   const timeStr = createdAt.toLocaleTimeString("en-US", { hour: "2-digit", minute: "2-digit", hour12: true });
   const paperWidth = receipt.paperSize === "a4" ? "210mm" : "80mm";
+  const pageMargin = receipt.paperSize === "a4" ? "10mm" : "0";
 
   const itemsRows = (order.items ?? []).map((item) =>
     `<tr><td style="padding:3px 0">${esc(item.name)}${item.modifiers?.length ? `<br><span style="font-size:9px;color:#9ca3af">${item.modifiers.map((m) => esc(m.name)).join(", ")}</span>` : ""}${item.note ? `<br><span style="font-size:9px;font-style:italic;color:#9ca3af">${esc(item.note)}</span>` : ""}</td><td style="text-align:center;padding:3px 0">${item.quantity}</td><td style="text-align:right;padding:3px 0">${formatCurrency(item.price * item.quantity)}</td></tr>`
@@ -30,6 +31,7 @@ table{width:100%;border-collapse:collapse}
 .logo{max-height:48px;margin:0 auto 6px;display:block;object-fit:contain}
 .token{font-size:28px;font-weight:900;letter-spacing:2px;margin:4px 0}
 .barcode{font-family:monospace;letter-spacing:4px;font-size:11px;color:#6b7280}
+@page{size:${paperWidth} auto;margin:${pageMargin}}
 @media print{body{padding:0}.no-print{display:none!important}}</style></head><body>
 <div class="receipt">
 <div class="center">
