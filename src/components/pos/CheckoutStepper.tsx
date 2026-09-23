@@ -7,7 +7,7 @@ import { Check } from "lucide-react";
 export const CHECKOUT_STEPS = [
   "Order Review",
   "Order Type",
-  "Payment Method",
+  "Method",
   "Payment",
   "Processing",
   "Success",

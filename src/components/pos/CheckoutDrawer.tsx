@@ -47,7 +47,7 @@ interface CheckoutDrawerProps {
 const STEP_ORDER: CheckoutStep[] = [
   "Order Review",
   "Order Type",
-  "Payment Method",
+  "Method",
   "Payment",
   "Processing",
   "Success",
@@ -235,7 +235,7 @@ export function CheckoutDrawer({ open, onOpenChange, onSuccessClose }: CheckoutD
               </motion.div>
             )}
 
-            {currentStepName === "Payment Method" && (
+            {currentStepName === "Method" && (
               <motion.div
                 key="payment"
                 initial={{ opacity: 0, x: 10 }}
